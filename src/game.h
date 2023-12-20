@@ -2,7 +2,7 @@
 #define GAME_H
 
 #include <utility>
-
+#include "common.h"
 
  
 
@@ -15,6 +15,8 @@ void InitGame();
 void UpdateGame();
 void DrawGame();
 void UnloadGame();
+
+void updateMazeSize();
   
 // Method declarations
 std::pair<int, int> InitializeMaze();

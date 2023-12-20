@@ -1,10 +1,12 @@
 #include "maze_generator.h"
+
 #include <algorithm>
 #include <chrono>
 #include <climits>
 #include <random>
 #include <queue>
 #include <utility>
+
 
 
 namespace MazeGenerator {
@@ -87,7 +89,9 @@ namespace MazeGenerator {
                             adjWalls.push_back({nx, ny});
                         }
                     }
-                    if (wallCount == 3 && rng() % 100 < pruningProbability) {
+                    if (wallCount == 3 && static_cast<int>(rng() % 100) < pruningProbability){
+
+                    //if (wallCount == 3 && rng() % 100 < pruningProbability) {
                         int index = rng() % adjWalls.size();
                         int wx = adjWalls[index].first;
                         int wy = adjWalls[index].second;

@@ -4,8 +4,7 @@
 #include <utility>
 #include <vector>
 
-const int MAX = 100;
-
+#include "common.h"
 namespace MazeGenerator {
 
     struct Point {
