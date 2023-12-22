@@ -91,7 +91,6 @@ namespace MazeGenerator {
                     }
                     if (wallCount == 3 && static_cast<int>(rng() % 100) < pruningProbability){
 
-                    //if (wallCount == 3 && rng() % 100 < pruningProbability) {
                         int index = rng() % adjWalls.size();
                         int wx = adjWalls[index].first;
                         int wy = adjWalls[index].second;
@@ -138,6 +137,7 @@ namespace MazeGenerator {
         
         
         maze[end_x][end_y] = 2; // end point of maze
+        maze[start_x][start_y] = 3;
             
         return std::make_pair(std::make_pair(start_x, start_y), std::make_pair(end_x, end_y));
     }

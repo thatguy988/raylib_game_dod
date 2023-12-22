@@ -8,6 +8,7 @@
     #include "collision.h"
     #include "player_camera.h"
     #include "bullet.h"
+    #include "enemy.h"
 
 
    
@@ -28,6 +29,7 @@
         std::pair<int, int> endCoords;
         
         BulletSystem::BulletManager bulletManager;
+        EnemySystem::EnemyManager enemyManager;
         
 
 
@@ -35,7 +37,9 @@
             auto startEndCoords = MazeGenerator::GenerateMaze(n, m, 70, maze);
             endCoords = startEndCoords.second;
             return startEndCoords.first;
+            
         }
+     
         
       
         void updateMazeSize() {
@@ -70,6 +74,10 @@
             updateMazeSize();
             auto startCoords = InitializeMaze();
             playerCamera.InitializeCamera(startCoords);
+            std::cout<< "initialize enemies"<< std::endl;
+            enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
+            std::cout<< "done"<< std::endl;
+
                     
 
         }
@@ -82,6 +90,7 @@
                 updateMazeSize();
                 auto newStartCoords = InitializeMaze();
                 playerCamera.InitializeCamera(newStartCoords);   
+                enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
             }    
             
             if (IsKeyPressed(KEY_ONE)) currentWeapon = BulletSystem::WeaponType::PISTOL;
@@ -109,7 +118,7 @@
             // Handle pistol shooting
             if (currentWeapon == BulletSystem::WeaponType::PISTOL && IsKeyPressed(KEY_SPACE)) {
                 if(bulletManager.pistolGunLastShotTime >= bulletManager.pistolGunShotDelay){
-                    bulletManager.Shoot(playerCamera.camera.position, bulletDirection, 1.0f, currentWeapon);
+                    bulletManager.Shoot(playerCamera.camera.position, bulletDirection, 0.1f, currentWeapon);
                     bulletManager.pistolGunLastShotTime = 0.0f; // Reset the timer
                 }
             }
@@ -123,6 +132,9 @@
             }
             
             bulletManager.UpdateBullets(maze, n, m, GameScreen::playerCamera.blockSize);
+            
+            CollisionHandling::CheckBulletEnemyCollision(bulletManager, enemyManager);
+            
             
         }
         
@@ -145,7 +157,7 @@
                     // Draw walls
                     DrawCube(Vector3 { (float)j * GameScreen::playerCamera.blockSize, wallHeight / 2, (float)i * GameScreen::playerCamera.blockSize }, 
                              GameScreen::playerCamera.blockSize, wallHeight, GameScreen::playerCamera.blockSize, DARKGRAY);
-                } else if(GameScreen::maze[i][j] == 0) {
+                } else if(GameScreen::maze[i][j] == 0 || GameScreen::maze[i][j] == 3) {
                     // Draw floor
                     DrawCube(Vector3 { (float)j * GameScreen::playerCamera.blockSize, -floorThickness / 2, (float)i * GameScreen::playerCamera.blockSize }, 
                              GameScreen::playerCamera.blockSize, floorThickness, GameScreen::playerCamera.blockSize, LIGHTGRAY);
@@ -160,6 +172,7 @@
                 }
             }
         }
+        enemyManager.DrawEnemies();
         bulletManager.DrawBullets();
         
         EndMode3D();

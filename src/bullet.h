@@ -39,9 +39,10 @@ namespace BulletSystem {
         void UpdateBullets(int maze[MAX][MAX], int n, int m, float blockSize);
         void DrawBullets();
         void Shoot(const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon);
-        void ShootBullet(const Vector3& position, const Vector3& direction, float speed);
     private:
         int FindInactiveBullet();
+        void ShootBullet(const Vector3& position, const Vector3& direction, float speed);
+
     };
 
 }

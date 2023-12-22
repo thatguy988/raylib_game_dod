@@ -1,6 +1,9 @@
 
 #include "collision.h"
 
+#include "raymath.h"
+#include <iostream>
+
 
 
 
@@ -39,6 +42,33 @@ namespace CollisionHandling {
         }
         return false; // No collision detected
     }
+    bool CheckBulletEnemyCollision(BulletSystem::BulletManager& bulletManager, EnemySystem::EnemyManager& enemyManager) {
+         const float COLLISION_DISTANCE = 2.0f;
+         for (auto& bullet : bulletManager.bullets) {
+             if (bullet.active) {
+                 for (auto& enemy : enemyManager.enemies) {
+                     if (enemy.active) {
+                         // Check if bullet position overlaps with enemy position
+                         if (Vector3Distance(bullet.position, enemy.position) < COLLISION_DISTANCE) {
+                             bullet.active = false; // Deactivate the bullet
+                             enemy.active = false;  // Deactivate the enemy
+                             return true; // Collision detected
+                         }
+                     }
+                 }
+             }
+         }
+        return false; // No collision detected
+    }
+    
+   
+
+    
+    
+  
+    
+    
+    
 
 }
 /*

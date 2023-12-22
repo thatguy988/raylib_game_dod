@@ -21,6 +21,7 @@ namespace BulletSystem {
                 if (CollisionHandling::CheckBulletCollision(bullets[i].position, maze, n, m, blockSize, 0.2f)) {
                     bullets[i].active = false; // Deactivate the bullet
                 }
+               
             }
         }
     }
