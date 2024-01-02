@@ -23,6 +23,9 @@
         int m;
         int maze[MAX][MAX];
         int dist[MAX][MAX];
+        
+        std::vector<Vector3> openPositions; // Vector to store open positions
+
      
         
         PlayerCamera playerCamera(0.1f, 4.0f);
@@ -36,6 +39,20 @@
         std::pair<int, int> InitializeMaze() {
             auto startEndCoords = MazeGenerator::GenerateMaze(n, m, 70, maze);
             endCoords = startEndCoords.second;
+            
+            
+            // Clear and update openPositions vector
+            openPositions.clear();
+            for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < m; ++j) {
+                    if (maze[i][j] == 0) {
+                        openPositions.push_back(Vector3{static_cast<float>(j) * playerCamera.blockSize, 0.0f, static_cast<float>(i) * playerCamera.blockSize});
+                    }
+                }
+            }
+            
+            
+            
             return startEndCoords.first;
             
         }
@@ -75,7 +92,9 @@
             auto startCoords = InitializeMaze();
             playerCamera.InitializeCamera(startCoords);
             std::cout<< "initialize enemies"<< std::endl;
-            enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
+            enemyManager.InitializeEnemies(openPositions);
+
+            //enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
             std::cout<< "done"<< std::endl;
 
                     
@@ -90,7 +109,9 @@
                 updateMazeSize();
                 auto newStartCoords = InitializeMaze();
                 playerCamera.InitializeCamera(newStartCoords);   
-                enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
+                enemyManager.InitializeEnemies(openPositions);
+
+                //enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
             }    
             
             if (IsKeyPressed(KEY_ONE)) currentWeapon = BulletSystem::WeaponType::PISTOL;
@@ -134,6 +155,8 @@
             bulletManager.UpdateBullets(maze, n, m, GameScreen::playerCamera.blockSize);
             
             CollisionHandling::CheckBulletEnemyCollision(bulletManager, enemyManager);
+            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions);
+
             
             
         }
@@ -174,6 +197,7 @@
         }
         enemyManager.DrawEnemies();
         bulletManager.DrawBullets();
+        
         
         EndMode3D();
        

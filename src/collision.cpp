@@ -10,8 +10,8 @@
 //GameScreen
 namespace CollisionHandling {
     int CheckCollision(const Vector3 &newPosition, const int maze[MAX][MAX], int n, int m, float blockSize) {
-        int gridX = (int)(newPosition.x / blockSize + 0.5f); // Center of the block
-        int gridZ = (int)(newPosition.z / blockSize + 0.5f); // Center of the block
+        int gridX = (int)(newPosition.x / blockSize + roundingOffset); // Center of the block
+        int gridZ = (int)(newPosition.z / blockSize + roundingOffset); // Center of the block
 
         if (gridX >= 0 && gridX < m && gridZ >= 0 && gridZ < n) {
             if (maze[gridZ][gridX] == 1) {
@@ -28,8 +28,8 @@ namespace CollisionHandling {
         for (float dx = -bulletRadius; dx <= bulletRadius; dx += bulletRadius) {
             for (float dz = -bulletRadius; dz <= bulletRadius; dz += bulletRadius) {
                 // Calculate the grid coordinates for the current point
-                int gridX = (int)((bulletPosition.x + dx) / blockSize + 0.5f);
-                int gridZ = (int)((bulletPosition.z + dz) / blockSize + 0.5f);
+                int gridX = (int)((bulletPosition.x + dx) / blockSize + roundingOffset);
+                int gridZ = (int)((bulletPosition.z + dz) / blockSize + roundingOffset);
 
                 // Check if the point is within the maze boundaries
                 if (gridX >= 0 && gridX < m && gridZ >= 0 && gridZ < n) {
@@ -61,30 +61,4 @@ namespace CollisionHandling {
         return false; // No collision detected
     }
     
-   
-
-    
-    
-  
-    
-    
-    
-
 }
-/*
-namespace CollisionHandling {
-    int CheckCollision(const Vector3 &newPosition, const int maze[MAX][MAX], int n, int m, float blockSize) {
-        // If blockSize is constant and 1/blockSize can be pre-calculated, replace blockSize with its inverse and use multiplication here.
-        int gridX = (int)(newPosition.x / blockSize + 0.5f); // Center of the block
-        int gridZ = (int)(newPosition.z / blockSize + 0.5f); // Center of the block
-
-        // Check maze boundaries first
-        if (gridX < 0 || gridX >= m || gridZ < 0 || gridZ >= n) {
-            return 0; // Out of bounds, no collision
-        }
-
-        // Return collision type with a single statement
-        return (maze[gridZ][gridX] == 1) ? 1 : ((maze[gridZ][gridX] == 2) ? 2 : 0);
-    }
-}
-*/
