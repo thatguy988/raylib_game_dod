@@ -18,8 +18,9 @@ namespace BulletSystem {
         Vector3 direction;
         float speed;
         bool active;
+        bool playerbullet;
 
-        Bullet() : position({0, 0, 0}), direction({0, 0, 1}), speed(0.5f), active(false) {}
+        Bullet() : position({0, 0, 0}), direction({0, 0, 1}), speed(0.5f), active(false), playerbullet(false) {}
     };
 
     class BulletManager {
@@ -39,9 +40,12 @@ namespace BulletSystem {
         void UpdateBullets(int maze[MAX][MAX], int n, int m, float blockSize);
         void DrawBullets();
         void Shoot(const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon);
+        void EnemyShootBullet(const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed);
+
     private:
         int FindInactiveBullet();
         void ShootBullet(const Vector3& position, const Vector3& direction, float speed);
+
 
     };
 

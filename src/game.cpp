@@ -155,7 +155,8 @@
             bulletManager.UpdateBullets(maze, n, m, GameScreen::playerCamera.blockSize);
             
             CollisionHandling::CheckBulletEnemyCollision(bulletManager, enemyManager);
-            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions);
+            CollisionHandling::CheckBulletPlayerCollision(bulletManager, playerCamera.camera.position);
+            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager);
 
             
             

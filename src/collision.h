@@ -14,6 +14,8 @@ namespace CollisionHandling {
     bool CheckBulletCollision(const Vector3 &bulletPosition, const int maze[MAX][MAX], int n, int m, float blockSize, float bulletRadius);
     
     bool CheckBulletEnemyCollision(BulletSystem::BulletManager& bulletManager, EnemySystem::EnemyManager& enemyManager);
+    
+    bool CheckBulletPlayerCollision(BulletSystem::BulletManager& bulletManager, const Vector3& playerPosition);
 
 
 

@@ -41,8 +41,23 @@ namespace BulletSystem {
             bullets[bulletIndex].position = position;
             bullets[bulletIndex].direction = direction;
             bullets[bulletIndex].speed = speed;
+            bullets[bulletIndex].playerbullet = true;
         }
     }
+    
+    
+    void BulletManager::EnemyShootBullet(const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed) {
+        int bulletIndex = FindInactiveBullet();
+        if (bulletIndex != -1) {
+            bullets[bulletIndex].active = true;
+            bullets[bulletIndex].position = enemyPosition;
+            bullets[bulletIndex].direction = shootingDirection;
+            bullets[bulletIndex].speed = bulletSpeed;
+            bullets[bulletIndex].playerbullet = false;
+        }
+    }
+    
+    
     
     void BulletManager::Shoot(const Vector3& position, const Vector3& direction, float speed, BulletSystem::WeaponType currentWeapon) {
         switch (currentWeapon) {

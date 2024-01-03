@@ -32,7 +32,7 @@ namespace EnemySystem {
         std::mt19937 gen(rd());
         std::uniform_real_distribution<float> probabilityDist(0.0f, 1.0f);
 
-        const float enemyPlacementProbability = 0.2f; // 20% chance to place an enemy at each position
+        const float enemyPlacementProbability = 0.35f; // 20% chance to place an enemy at each position
 
         std::vector<Vector3> availablePositions = openPositions; // Copy open positions
 
@@ -166,7 +166,7 @@ namespace EnemySystem {
 
 
     
-    void EnemyManager::UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions) {
+    void EnemyManager::UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletManager& bulletManager) {
         for (auto& enemy : enemies) {
             if (!enemy.active) continue;
 
@@ -174,7 +174,7 @@ namespace EnemySystem {
 
             switch (enemy.state) {
                 case EnemyState::IDLE:
-                    std::cout << "In idle state" << std::endl;
+                    //std::cout << "In idle state" << std::endl;
                     
                     // Calculate a random wandering path if the current path is empty
                     if (enemy.path.empty()) {
@@ -199,7 +199,7 @@ namespace EnemySystem {
                     
                     if (canSeePlayer) {
                         
-                        std::cout << "Line of sight of enemy and player" << std::endl;
+                        //std::cout << "Line of sight of enemy and player" << std::endl;
                         enemy.path = BFS(enemy.position, playerPosition, maze, n, m, blockSize);
                         if (!enemy.path.empty()) {
                             enemy.path.pop_back(); // Remove the last step (player's position) from the path
@@ -211,12 +211,39 @@ namespace EnemySystem {
                     break;
 
                 case EnemyState::ATTACKING:
-                    std::cout << "In attacking state" << std::endl;
+                    //std::cout << "In attacking state" << std::endl;
 
                     if (!canSeePlayer && enemy.path.empty()) {
                         // Switch to idle only after completing the path
                         enemy.state = EnemyState::IDLE;
                     } else {
+                        
+                        // Shoot towards the player if the shooting interval has passed
+                        if (enemy.shootingTimer >= enemy.shootingInterval) {
+                            Vector3 shootingPosition = enemy.position;
+                            shootingPosition.y += enemy.shootingHeightOffset; // Adjust bullet shooting height
+
+                            // Modify shooting direction to maintain a constant height
+                            Vector3 flatPlayerPosition = playerPosition;
+                            flatPlayerPosition.y = shootingPosition.y; // Set player position y to be the same as shooting position y
+                            Vector3 shootingDirection = Vector3Normalize(Vector3Subtract(flatPlayerPosition, shootingPosition));
+                            
+                            
+                            //for bullet hitting enemy
+                            /*
+                             // Offset the shooting position slightly in the direction of the shot
+                            float bulletSpawnOffset = 2.0f; // Adjust as needed
+                            Vector3 spawnPosition = Vector3Add(shootingPosition, Vector3Scale(shootingDirection, bulletSpawnOffset));
+                            
+                            bulletManager.EnemyShootBullet(spawnPosition, shootingDirection, enemy.bulletSpeed);
+                             */
+
+                            bulletManager.EnemyShootBullet(shootingPosition, shootingDirection, enemy.bulletSpeed);
+                            enemy.shootingTimer = 0.0f; // Reset the timer
+                        } else {
+                            enemy.shootingTimer += GetFrameTime(); // Update the timer
+                        }
+                        
                         // Update the path if the player has moved
                         if (Vector3Distance(enemy.lastKnownPlayerPos, playerPosition) > (blockSize + roundingOffset)) {
                             enemy.path = BFS(enemy.position, playerPosition, maze, n, m, blockSize);
@@ -242,35 +269,6 @@ namespace EnemySystem {
                         }
                     }
                     break;
-                /*
-                    std::cout << "In attacking state" << std::endl;
-                    if (!canSeePlayer) {
-                        enemy.state = EnemyState::IDLE;
-                        enemy.path.clear();
-                    } else {
-                        // Check if player has moved significantly since last path calculation
-                        if (Vector3Distance(enemy.lastKnownPlayerPos, playerPosition) > (blockSize + roundingOffset)) {
-                            enemy.path = BFS(enemy.position, playerPosition, maze, n, m, blockSize);
-                            if (!enemy.path.empty()) {
-                                enemy.path.pop_back(); // Remove the last step (player's position) from the path
-                            }
-                            enemy.lastKnownPlayerPos = playerPosition; // Update the last known position
-                        }
-
-                        // Move the enemy along the path
-                        if (!enemy.path.empty()) {
-                            Vector3 nextStep = enemy.path.front();
-                            if (Vector3Distance(enemy.position, nextStep) <= enemy.movementSpeed) {
-                                enemy.position = nextStep;
-                                enemy.path.erase(enemy.path.begin()); // Remove the reached point
-                            } else {
-                                Vector3 direction = Vector3Normalize(Vector3Subtract(nextStep, enemy.position));
-                                enemy.position = Vector3Add(enemy.position, Vector3Scale(direction, enemy.movementSpeed));
-                            }
-                        }
-                    }
-                    break;
-                    */
             }
         }
     }
