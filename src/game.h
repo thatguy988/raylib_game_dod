@@ -17,8 +17,7 @@ void DrawGame();
 void UnloadGame();
 
 void updateMazeSize();
-  
-// Method declarations
+
 std::pair<int, int> InitializeMaze();
 void InitializeCamera();
 

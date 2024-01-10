@@ -15,15 +15,26 @@
 
 
 
+
 namespace EnemySystem {
     
     
         
-    const int MAX_ENEMIES = 5;  // Maximum number of enemies
+    const int MAX_ENEMIES = 1;  // Maximum number of enemies in one maze
+    
+    
+    enum class EnemyType {
+        IMP,
+        FAST,
+        STRONG,
+        NONE
+    
+    };
     
     enum class EnemyState {
         IDLE,
-        ATTACKING
+        ATTACKING,
+        CHASING
     };
 
     struct Enemy {
@@ -39,10 +50,39 @@ namespace EnemySystem {
         float bulletSpeed;
         float shootingInterval;
         float shootingHeightOffset; // Height offset for shooting
+        
+        EnemyType type;
+        
+        int enemyHealth;
+        
+        
+        
+        Vector3 facingDirection; // The direction in which the enemy is facing
+        
+        
+        Enemy() : position({0, 0, 0}), targetPosition({0, 0, 0}), movementSpeed(0.1f), active(false), 
+          state(EnemyState::IDLE), path(), lastKnownPlayerPos({0,0,0}), shootingTimer(0.0f), 
+          bulletSpeed(0.1f), shootingInterval(1.0f), shootingHeightOffset(0.75f), 
+          type(EnemyType::IMP), enemyHealth(InitializeHealth(EnemyType::IMP)), 
+          facingDirection({0, 0, 1}) {}
+
+
 
 
         
-        Enemy() : position({0, 0, 0}), targetPosition({0, 0, 0}), movementSpeed(0.1f), active(false), state(EnemyState::IDLE), path(), lastKnownPlayerPos({0,0,0}), shootingTimer(0.0f), bulletSpeed(0.1f), shootingInterval(1.0f), shootingHeightOffset(0.75f) {}
+        
+        static int InitializeHealth(EnemyType type) {
+            switch (type) {
+                case EnemyType::IMP: 
+                    return 50;  // Health for IMP type
+                case EnemyType::FAST: 
+                    return 30;  // Health for FAST type
+                case EnemyType::STRONG: 
+                    return 100; // Health for STRONG type
+                default: 
+                    return 0;
+            }
+        }
 
     };
 
@@ -56,11 +96,22 @@ namespace EnemySystem {
 
         void UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletManager& bulletManager); // Implement enemy logic
         void DrawEnemies();
+        bool CheckPlayerSingleEnemyCollision(const Vector3& playerPosition, const Enemy& enemy, float collisionDistance);
+        void Reset();
+       
+
         
        
 
     private:
         void PlaceEnemy(int index, Vector3 position);
+        // New method declarations
+        void CalculatePathToRandomTarget(Enemy& enemy, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize);
+        void CalculatePathToPlayer(Enemy& enemy, const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize);
+        void MoveEnemyAlongPath(Enemy& enemy);
+        void HandleAttackState(Enemy& enemy, const Vector3& playerPosition, BulletSystem::BulletManager& bulletManager);
+        void UpdateEnemyState(Enemy& enemy, const Vector3& playerPosition,  const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize);
+         
 
     };
 }

@@ -9,6 +9,12 @@
     #include "player_camera.h"
     #include "bullet.h"
     #include "enemy.h"
+    #include "ammobox.h"
+    #include "healthbox.h"
+    
+    #define LIGHTRED        (Color){ 230, 41, 55, 128 }     
+
+
 
 
    
@@ -16,7 +22,13 @@
     namespace GameScreen {
         
         BulletSystem::WeaponType currentWeapon = BulletSystem::WeaponType::PISTOL;
-
+        
+        bool isRedFlashActive = false;
+        float redFlashDuration = 0.2f; // Duration of the flash in seconds
+        float redFlashTimer = 0.0f;    // Timer to track the flash duration
+        
+        int playerHealth = 100; //health of player
+        int maxPlayerHealth = 100; //max health of player
 
         int level = 1;
         int n;
@@ -26,13 +38,20 @@
         
         std::vector<Vector3> openPositions; // Vector to store open positions
 
+        std::vector<Vector3> openPositionsForItems;
      
+        
+        
         
         PlayerCamera playerCamera(0.1f, 4.0f);
         std::pair<int, int> endCoords;
         
         BulletSystem::BulletManager bulletManager;
         EnemySystem::EnemyManager enemyManager;
+        AmmoSystem::AmmoBoxManager ammoBoxManager;
+        HealthSystem::HealthBoxManager healthBoxManager;
+        
+        
         
 
 
@@ -50,11 +69,7 @@
                     }
                 }
             }
-            
-            
-            
             return startEndCoords.first;
-            
         }
      
         
@@ -88,14 +103,34 @@
         
 
         void InitGame() {
+            enemyManager.Reset();
+            bulletManager.Reset();
+            ammoBoxManager.Reset();
+            healthBoxManager.Reset();
+            
+            
             updateMazeSize();
             auto startCoords = InitializeMaze();
             playerCamera.InitializeCamera(startCoords);
-            std::cout<< "initialize enemies"<< std::endl;
+            openPositionsForItems = openPositions;
             enemyManager.InitializeEnemies(openPositions);
+            
+            
+            
+            
+            
+            
+            ammoBoxManager.InitializeAmmoBoxes(openPositionsForItems);
+            healthBoxManager.InitializeHealthBoxes(openPositionsForItems);
+            
 
             //enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
-            std::cout<< "done"<< std::endl;
+           
+            
+            
+
+                        
+          
 
                     
 
@@ -103,15 +138,21 @@
 
         void UpdateGame() {
             
-            auto exitpoint = playerCamera.UpdateCamera(maze, n, m);
+            
+            
+            
+            auto exitpoint = playerCamera.UpdateCamera(maze, n, m, enemyManager);
             if(exitpoint == 2 && IsKeyPressed(KEY_R)){
                 level += 1;
-                updateMazeSize();
-                auto newStartCoords = InitializeMaze();
-                playerCamera.InitializeCamera(newStartCoords);   
-                enemyManager.InitializeEnemies(openPositions);
+                InitGame();
+                //updateMazeSize();
+                //auto newStartCoords = InitializeMaze();
+                //playerCamera.InitializeCamera(newStartCoords);   
+                //enemyManager.InitializeEnemies(openPositions);
+                //ammoBoxManager.InitializeAmmoBoxes(openPositions);
+                //healthBoxManager.InitializeHealthBoxes(openPositions);
 
-                //enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
+
             }    
             
             if (IsKeyPressed(KEY_ONE)) currentWeapon = BulletSystem::WeaponType::PISTOL;
@@ -155,9 +196,34 @@
             bulletManager.UpdateBullets(maze, n, m, GameScreen::playerCamera.blockSize);
             
             CollisionHandling::CheckBulletEnemyCollision(bulletManager, enemyManager);
-            CollisionHandling::CheckBulletPlayerCollision(bulletManager, playerCamera.camera.position);
-            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager);
+            //CollisionHandling::CheckBulletPlayerCollision(bulletManager, playerCamera.camera.position);
+            
+            // Check for bullet-player collision
+            if (CollisionHandling::CheckBulletPlayerCollision(bulletManager, playerCamera.camera.position, playerHealth)) {
+                isRedFlashActive = true; // Activate the red flash
+                redFlashTimer = redFlashDuration; // Reset the timer
+                
+            }
+            
+            // check collision between player and ammo box
+            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.camera.position, ammoBoxManager, bulletManager, 2.0f);
+            //check collision between player and health box
+            CollisionHandling:: CheckPlayerHealthBoxCollision(playerCamera.camera.position, healthBoxManager, playerHealth, maxPlayerHealth, 2.0f);
+            
+                
 
+
+            // Update the red flash timer
+            if (isRedFlashActive) {
+                redFlashTimer -= GetFrameTime();
+                if (redFlashTimer <= 0) {
+                    isRedFlashActive = false; // Deactivate the red flash
+                }
+            }
+            
+            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager);
+            
+            
             
             
         }
@@ -174,6 +240,8 @@
     
 
         BeginMode3D(GameScreen::playerCamera.camera);
+        
+        
         
         for (int i = 0; i < GameScreen::n; ++i) {
             for (int j = 0; j < GameScreen::m; ++j) {
@@ -198,16 +266,57 @@
         }
         enemyManager.DrawEnemies();
         bulletManager.DrawBullets();
+        ammoBoxManager.DrawAmmoBoxes();
+        healthBoxManager.DrawHealthBoxes();
+        
+
+        
         
         
         EndMode3D();
-       
+        
+        // Draw the red flash if active
+        if (isRedFlashActive) {
+            DrawRectangle(0, 0, 1000, 600, LIGHTRED);
+        }
 
         DrawText("Game Screen", 20, 20, 40, WHITE);
+        
+        // Display ammo information
+        char ammoText[50]; // Buffer to hold the formatted ammo text
+        switch (currentWeapon) {
+            case BulletSystem::WeaponType::PISTOL:
+                sprintf(ammoText, "Pistol Ammo: %d/%d", bulletManager.PistolAmmo, bulletManager.PistolAmmoCapacity);
+                break;
+            case BulletSystem::WeaponType::SHOTGUN:
+                sprintf(ammoText, "Shotgun Ammo: %d/%d", bulletManager.ShotgunAmmo, bulletManager.ShotgunAmmoCapacity);
+                break;
+            case BulletSystem::WeaponType::MACHINE_GUN:
+                sprintf(ammoText, "Machine Gun Ammo: %d/%d", bulletManager.MachineGunAmmo, bulletManager.MachineGunAmmoCapacity);
+                break;
+            default://for none
+                break;
+        }
+        DrawText(ammoText, 20, 70, 20, WHITE); // Position the text below "Game Screen"
+        char healthText[50];
+        sprintf(healthText, "Health: %d/%d", playerHealth, maxPlayerHealth);
+        DrawText(healthText, 20, 100, 20, WHITE);
+  
+
+        
+        
+        
+
+
+
     }
 
 
     void UnloadGame() {
+        enemyManager.Reset();
+        bulletManager.Reset();
+        ammoBoxManager.Reset();
+        healthBoxManager.Reset();
        
 
     }

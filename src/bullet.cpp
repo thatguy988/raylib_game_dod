@@ -3,6 +3,7 @@
 #include "bullet.h"
 #include "collision.h"
 #include "raymath.h"
+#include "enemy.h"
 
 namespace BulletSystem {
 
@@ -33,8 +34,40 @@ namespace BulletSystem {
             }
         }
     }
+    
+    // Correct the EnemyTypeToString function
+    std::string EnemyTypeToString(EnemySystem::EnemyType type) {
+        switch (type) {
+            case EnemySystem::EnemyType::IMP:
+                return "IMP";
+            case EnemySystem::EnemyType::FAST:
+                return "FAST";
+            case EnemySystem::EnemyType::STRONG:
+                return "STRONG";
+            case EnemySystem::EnemyType::NONE:
+                return "NONE";
+            default:
+                return "UNKNOWN";
+        }
+    }
+    
+    // Convert WeaponType enum to string
+    std::string WeaponTypeToString(WeaponType type) {
+        switch (type) {
+            case WeaponType::PISTOL:
+                return "PISTOL";
+            case WeaponType::SHOTGUN:
+                return "SHOTGUN";
+            case WeaponType::MACHINE_GUN:
+                return "MACHINE_GUN";
+            case WeaponType::NONE:
+                return "NONE";
+            default:
+                return "UNKNOWN";
+        }
+    }
 
-    void BulletManager::ShootBullet(const Vector3& position, const Vector3& direction, float speed) {
+    void BulletManager::ShootBullet(const Vector3& position, const Vector3& direction, float speed, BulletSystem::WeaponType currentWeapon) {
         int bulletIndex = FindInactiveBullet();
         if (bulletIndex != -1) {
             bullets[bulletIndex].active = true;
@@ -42,11 +75,19 @@ namespace BulletSystem {
             bullets[bulletIndex].direction = direction;
             bullets[bulletIndex].speed = speed;
             bullets[bulletIndex].playerbullet = true;
+            bullets[bulletIndex].weaponType = currentWeapon; // Set weapon type for player
+            bullets[bulletIndex].enemyType = EnemySystem::EnemyType::NONE; // Enemy type is NONE for player bullets
+            
+           // std::cout << "Weapon Type: " << WeaponTypeToString(currentWeapon) << std::endl;
+            //std::cout << "Enemy Type: " << EnemyTypeToString(bullets[bulletIndex].enemyType) << std::endl;
+
+
+
         }
     }
     
     
-    void BulletManager::EnemyShootBullet(const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed) {
+    void BulletManager::EnemyShootBullet(const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed, EnemySystem::EnemyType enemyType) {
         int bulletIndex = FindInactiveBullet();
         if (bulletIndex != -1) {
             bullets[bulletIndex].active = true;
@@ -54,6 +95,16 @@ namespace BulletSystem {
             bullets[bulletIndex].direction = shootingDirection;
             bullets[bulletIndex].speed = bulletSpeed;
             bullets[bulletIndex].playerbullet = false;
+            bullets[bulletIndex].enemyType = enemyType; // Enemy type is NONE for player bullets
+            bullets[bulletIndex].weaponType = BulletSystem::WeaponType::NONE; // Set weapon type for player
+            
+            //std::cout << "Weapon Type: " << WeaponTypeToString(bullets[bulletIndex].weaponType) << std::endl;
+            //std::cout << "Enemy Type: " << EnemyTypeToString(enemyType) << std::endl;
+
+
+
+            
+
         }
     }
     
@@ -63,32 +114,49 @@ namespace BulletSystem {
         switch (currentWeapon) {
             case WeaponType::PISTOL:
                 // Shoot a single bullet
-                ShootBullet(position, direction, speed);
+                if (PistolAmmo != 0){
+                    ShootBullet(position, direction, speed, currentWeapon);
+                    PistolAmmo -= 1;
+                }else{
+                    //std::cout << "Out of pistol ammo" << std::endl;
+                }
                 break;
             case WeaponType::SHOTGUN:{
-            
-                int shotgunPellets = 10; // Number of pellets for the shotgun
-                float spreadAngle = 10.0f; // Spread angle in degrees
+                if (ShotgunAmmo != 0){
+                    int shotgunPellets = 10; // Number of pellets for the shotgun
+                    float spreadAngle = 10.0f; // Spread angle in degrees
 
-                std::random_device rd;
-                std::mt19937 gen(rd());
-                std::uniform_real_distribution<float> dis(-spreadAngle, spreadAngle);
+                    std::random_device rd;
+                    std::mt19937 gen(rd());
+                    std::uniform_real_distribution<float> dis(-spreadAngle, spreadAngle);
 
-                for (int i = 0; i < shotgunPellets; ++i) {
-                    // Randomly alter the direction within the spread angle
-                    float angle = dis(gen); // Random angle in degrees
-                    float rad = angle * DEG2RAD; // Convert to radians
+                    for (int i = 0; i < shotgunPellets; ++i) {
+                        // Randomly alter the direction within the spread angle
+                        float angle = dis(gen); // Random angle in degrees
+                        float rad = angle * DEG2RAD; // Convert to radians
 
-                    // Create a rotation matrix based on the random angle
-                    Matrix rotation = MatrixRotate(Vector3{0, 1, 0}, rad); // Assuming spread in horizontal plane
-                    Vector3 spreadDir = Vector3Transform(direction, rotation);
+                        // Create a rotation matrix based on the random angle
+                        Matrix rotation = MatrixRotate(Vector3{0, 1, 0}, rad); // Assuming spread in horizontal plane
+                        Vector3 spreadDir = Vector3Transform(direction, rotation);
 
-                    ShootBullet(position, spreadDir, speed);
+                        ShootBullet(position, spreadDir, speed, currentWeapon);
+                       
+                    }
+                    ShotgunAmmo -= 1;
+                }else{
+                   // std::cout << "Out of shotgun ammo" << std::endl;
                 }
             }
                 break;
             case WeaponType::MACHINE_GUN:
-                ShootBullet(position, direction, speed);
+                if (MachineGunAmmo != 0){
+                    ShootBullet(position, direction, speed, currentWeapon);
+                    MachineGunAmmo -= 1;
+                }else{
+                   // std::cout << "Out of machine gun ammo" << std::endl;
+                }
+                break;
+           default://for none
                 break;
         }
     }
@@ -102,5 +170,18 @@ namespace BulletSystem {
         }
         return -1;
     }
+    
+    
 
+        void BulletManager::Reset() {
+            for (auto& bullet : bullets) {
+                bullet.active = false;
+                bullet.position = Vector3{0, 0, 0};
+                bullet.direction = Vector3{0, 0, 1};
+                bullet.speed = 0.5f;
+                bullet.playerbullet = false;
+                
+            }
+
+}
 }
