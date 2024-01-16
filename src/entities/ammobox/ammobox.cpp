@@ -11,18 +11,27 @@ AmmoBoxManager::AmmoBoxManager() {
 }
 
 // Activate the ammo box at a specified position
-void AmmoBoxManager::AmmoBox::Activate(Vector3 pos) {
+void AmmoBox::Activate(Vector3 pos) {
     position = pos;
     active = true;
+    
+    // Update the bounding box position when ammo box is activated
+    Vector3 halfSize = Vector3Scale((Vector3){1.0f, 1.0f, 1.0f}, 0.5f);  // Adjust size as needed
+    body.min = Vector3Subtract(position, halfSize);
+    body.max = Vector3Add(position, halfSize);
 }
 
 // Deactivate the ammo box
-void AmmoBoxManager::AmmoBox::Deactivate() {
+void AmmoBox::Deactivate() {
     active = false;
+    
+    // Reset the bounding box 
+    body.min = Vector3Zero();
+    body.max = Vector3Zero();
 }
 
 // Draw the ammo box if it's active
-void AmmoBoxManager::AmmoBox::Draw() {
+void AmmoBox::Draw() {
     if (active) {
         DrawCube(position, 1.0f, 1.0f, 1.0f, BROWN); // Adjust size and color as needed
     }

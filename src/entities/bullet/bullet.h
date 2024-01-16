@@ -2,9 +2,14 @@
 #define BULLET_H
 
 #include <iostream>
-
+#include <vector>
 #include "raylib.h"
-#include "common.h"
+
+
+#include "../../common.h"
+
+
+
 
 // Forward declaration of EnemySystem namespace and Enemy struct
 namespace EnemySystem {
@@ -32,6 +37,8 @@ namespace BulletSystem {
         float speed;
         bool active;
         bool playerbullet;
+        float radius; // Radius of the bullet for collision detection
+
         
         EnemySystem::EnemyType enemyType; // Type of enemy that shot the bullet
 
@@ -40,7 +47,7 @@ namespace BulletSystem {
         
 
 
-        Bullet() : position({0, 0, 0}), direction({0, 0, 1}), speed(0.5f), active(false), playerbullet(false) {}
+        Bullet() : position({0, 0, 0}), direction({0, 0, 1}), speed(0.5f), active(false), playerbullet(false), radius(0.1f) {}
     };
 
     class BulletManager {
@@ -69,7 +76,8 @@ namespace BulletSystem {
 
         
         BulletManager();
-        void UpdateBullets(int maze[MAX][MAX], int n, int m, float blockSize);
+        void UpdateBullets(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox);
+        void CheckBulletOutOfBounds(const BoundingBox& boundary);
         void DrawBullets();
         void Shoot(const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon);
         void EnemyShootBullet(const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed, EnemySystem::EnemyType enemyType);

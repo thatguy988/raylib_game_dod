@@ -1,9 +1,9 @@
 #include <random>
 
 #include "bullet.h"
-#include "collision.h"
+#include "../../collision/collision.h"
 #include "raymath.h"
-#include "enemy.h"
+#include "../enemy/enemy.h"
 
 namespace BulletSystem {
 
@@ -13,14 +13,29 @@ namespace BulletSystem {
             bullets[i] = Bullet();
         }
     }
-
-    void BulletManager::UpdateBullets(int maze[MAX][MAX], int n, int m, float blockSize) {
+    
+    
+    
+    // Add the CheckBulletOutOfBounds function in BulletManager
+    void BulletManager::CheckBulletOutOfBounds(const BoundingBox& boundary) {
+        for (int i = 0; i < MAX_BULLETS; i++) {
+            if (bullets[i].active && !CheckCollisionBoxSphere(boundary, bullets[i].position, bullets[i].radius)) {
+                std::cout << "bullet went out of bounds" << std::endl;
+                // Bullet is out of bounds, deactivate it
+                bullets[i].active = false;
+            }
+        }
+    }
+    
+    
+    
+    void BulletManager::UpdateBullets(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox) {
         for (int i = 0; i < MAX_BULLETS; ++i) {
             if (bullets[i].active) {
                 bullets[i].position = Vector3Add(bullets[i].position, Vector3Scale(bullets[i].direction, bullets[i].speed));
-                
-                if (CollisionHandling::CheckBulletCollision(bullets[i].position, maze, n, m, blockSize, 0.2f)) {
+                if (CollisionHandling::CheckBulletCollision(bullets[i].position, wallBoundingBoxes, endpointBoundingBox, bullets[i].radius)) {
                     bullets[i].active = false; // Deactivate the bullet
+                    //std::cout << bullets[i].active << std::endl;
                 }
                
             }
@@ -30,7 +45,7 @@ namespace BulletSystem {
     void BulletManager::DrawBullets() {
         for (int i = 0; i < MAX_BULLETS; ++i) {
             if (bullets[i].active) {
-                DrawSphere(bullets[i].position, 0.2f, RED);
+                DrawSphere(bullets[i].position, bullets[i].radius, RED);
             }
         }
     }
@@ -40,10 +55,10 @@ namespace BulletSystem {
         switch (type) {
             case EnemySystem::EnemyType::IMP:
                 return "IMP";
-            case EnemySystem::EnemyType::FAST:
-                return "FAST";
-            case EnemySystem::EnemyType::STRONG:
-                return "STRONG";
+            case EnemySystem::EnemyType::DEMON:
+                return "DEMON";
+            case EnemySystem::EnemyType::BARON_OF_HELL:
+                return "BARON_OF_HELL";
             case EnemySystem::EnemyType::NONE:
                 return "NONE";
             default:

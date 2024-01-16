@@ -11,19 +11,27 @@ HealthBoxManager::HealthBoxManager() {
 }
 
 // Activate the health box at a specified position with a specified health amount
-void HealthBoxManager::HealthBox::Activate(Vector3 pos, int health) {
+void HealthBox::Activate(Vector3 pos, int health) {
     position = pos;
     active = true;
     healthPoints = health;
+    
+    // Update the bounding box position when health box is activated
+    Vector3 halfSize = Vector3Scale((Vector3){1.0f, 1.0f, 1.0f}, 0.5f);  
+    body.min = Vector3Subtract(position, halfSize);
+    body.max = Vector3Add(position, halfSize);
 }
 
 // Deactivate the health box
-void HealthBoxManager::HealthBox::Deactivate() {
+void HealthBox::Deactivate() {
     active = false;
+    
+    body.min = Vector3Zero();
+    body.max = Vector3Zero();
 }
 
 // Draw the health box if it's active
-void HealthBoxManager::HealthBox::Draw() {
+void HealthBox::Draw() {
     if (active) {
         DrawCube(position, 1.0f, 1.0f, 1.0f, PINK); // Adjust size and color as needed
     }

@@ -22,17 +22,15 @@ namespace EnemySystem {
         }
     }
     
-    
-     
-    bool EnemyManager::CheckPlayerSingleEnemyCollision(const Vector3& playerPosition, const Enemy& enemy, float collisionDistance) {
-        if (enemy.active) {
-            if (Vector3Distance(playerPosition, enemy.position) < collisionDistance) {
-               // std::cout << "Player collided with enemy" << std::endl;
-                return true; // Collision detected
+    bool EnemyManager::CheckPlayerSingleEnemyCollision(const BoundingBox &playerBody, const BoundingBox &enemyBody) {
+            if (CheckCollisionBoxes(playerBody, enemyBody)){
+                // Collision logic
+                return true;   
             }
-        }
         return false; // No collision detected
     }
+
+    
     
     
     void EnemySystem::EnemyManager::InitializeEnemies(const std::vector<Vector3>& openPositions) {
@@ -55,102 +53,7 @@ namespace EnemySystem {
             }
         }
     }
-    
-   
-
-
-    
-    
-    bool LineOfSight(const Vector3& enemyPos, const Vector3& playerPos, const int maze[MAX][MAX], int n, int m, float blockSize) {
-        //bresenham algorithm
-        int x0 = static_cast<int>(enemyPos.x / blockSize);
-        int z0 = static_cast<int>(enemyPos.z / blockSize);
-        int x1 = static_cast<int>(playerPos.x / blockSize);
-        int z1 = static_cast<int>(playerPos.z / blockSize);
-
-        int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-        int dz = -std::abs(z1 - z0), sz = z0 < z1 ? 1 : -1;
-        int err = dx + dz, e2; // error value e_xy
-
-        while (true) {
-            // Check if current position hits a wall
-            if (x0 >= 0 && x0 < m && z0 >= 0 && z0 < n) {
-            
-                if (maze[z0][x0] == 1) {
-                    return false; // Collision detected, no clear line of sight
-                }
-            } else {
-                return false; // Out of bounds, no clear line of sight
-            }
-
-            if (x0 == x1 && z0 == z1) break; // Check if reached player position
-
-            e2 = 2 * err;
-            if (e2 >= dz) { err += dz; x0 += sx; } // Move along x-axis
-            if (e2 <= dx) { err += dx; z0 += sz; } // Move along z-axis
-        }
-
-        return true; // Clear line of sight
-    }
-
-
-
-  
-
-    
-    
-   
-
-    
-    
-    /*
-    //bool LineOfSight(const Vector3& enemyPos, const Vector3& playerPos, const Vector3& facingDirection, float fovAngle, const int maze[MAX][MAX], int n, int m, float blockSize) {
-    bool LineOfSight(const Vector3& enemyPos, const Vector3& playerPos, const int maze[MAX][MAX], int n, int m, float blockSize) {
-        // Calculate the direction from the enemy to the player
-        Vector3 delta = Vector3Subtract(playerPos, enemyPos);
-        // Normalize the direction vector
-       // Vector3 direction = Vector3Normalize(delta);
-        // Calculate the total distance to check
-        float maxSightRange = 100.0f; // Max sight range
-        float distance = Vector3Length(delta);
-        distance = fmin(distance, maxSightRange); // Clamp distance to max sight range
-
-        // Calculate a step vector for the ray traversal
-        Vector3 step = Vector3Scale(direction, blockSize / 0.5f); // Smaller step for higher accuracy
-
-        // Initialize current position to the enemy's position
-        Vector3 currentPos = enemyPos;
-        // Traverse the ray
-        for (float coveredDistance = 0; coveredDistance < distance; coveredDistance += Vector3Length(step)) {
-            currentPos = Vector3Add(currentPos, step);
-
-            // Calculate the grid coordinates
-            int gridX = static_cast<int>(currentPos.x / blockSize + roundingOffset);
-            int gridY = static_cast<int>(currentPos.z / blockSize + roundingOffset);
-
-            // Check if current position is outside the maze bounds
-            if (gridX < 0 || gridX >= m || gridY < 0 || gridY >= n) {
-                return false; // Out of bounds, no clear line of sight
-            }
-
-            // Check if the current position hits a wall
-            if (maze[gridY][gridX] == 1) {
-                return false; // Collision detected, no clear line of sight
-            }
-        }
-        
-        
-      
-
-        return true; // Clear line of sight
-    }
-    */
-    
-    
-    
-    
-    
-    
+     
     
     // Helper function to convert 2D grid position to a linear index
     int PosToIndex(int x, int y, int m) {
@@ -164,10 +67,10 @@ namespace EnemySystem {
         std::vector<Vector3> path;
 
         // Convert start and end positions to grid indices
-        int startX = static_cast<int>(start.x / blockSize);
-        int startY = static_cast<int>(start.z / blockSize);
-        int endX = static_cast<int>(end.x / blockSize);
-        int endY = static_cast<int>(end.z / blockSize);
+        int startX = static_cast<int>(start.x / blockSize + roundingOffset);
+        int startY = static_cast<int>(start.z / blockSize + roundingOffset);
+        int endX = static_cast<int>(end.x / blockSize + roundingOffset);
+        int endY = static_cast<int>(end.z / blockSize + roundingOffset);
 
         queue.push(Vector3{static_cast<float>(startX), 0, static_cast<float>(startY)});
         cameFrom[PosToIndex(startX, startY, m)] = Vector3{-1, -1, -1}; // Use -1 to indicate the start
@@ -260,6 +163,10 @@ namespace EnemySystem {
                 enemy.position = Vector3Add(enemy.position, Vector3Scale(direction, enemy.movementSpeed));
                 enemy.facingDirection = direction;
             }
+            // Update the enemy's bounding box
+            Vector3 halfSize = Vector3Scale((Vector3){1.0f, 2.5f, 1.0f}, 0.5f);  // Adjust size as needed
+            enemy.body.min = Vector3Subtract(enemy.position, halfSize);
+            enemy.body.max = Vector3Add(enemy.position, halfSize);
         }
     }
     
@@ -277,13 +184,13 @@ namespace EnemySystem {
     
     
     
-    void EnemyManager::UpdateEnemyState(Enemy& enemy, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize) {
-        bool canSeePlayer = LineOfSight(enemy.position, playerPosition, maze, n, m, blockSize);
+    void EnemyManager::UpdateEnemyState(Enemy& enemy, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, BulletSystem::BulletManager& bulletManager) {
 
         switch (enemy.state) {
             case EnemyState::IDLE:
+                //std::cout<<"IN idle"<<std::endl;
                 CalculatePathToRandomTarget(enemy, openPositions, maze, n, m, blockSize);
-                if (canSeePlayer) {
+                if (rayHitsPlayer) {
                     enemy.path.clear();
                     CalculatePathToPlayer(enemy, playerPosition, maze, n, m, blockSize);
                     enemy.state = EnemyState::ATTACKING;
@@ -291,56 +198,80 @@ namespace EnemySystem {
                 break;
 
             case EnemyState::ATTACKING:
-                if (!canSeePlayer) {
+                //std::cout<<"IN attack"<<std::endl;
+                if (!rayHitsPlayer) {
                     enemy.path.clear();
                     CalculatePathToPlayer(enemy, enemy.lastKnownPlayerPos, maze, n, m, blockSize);
                     enemy.state = EnemyState::CHASING; 
                 } else if (enemy.path.empty()) {
                     CalculatePathToPlayer(enemy, playerPosition, maze, n, m, blockSize);
                 }
+                HandleAttackState(enemy, playerPosition, bulletManager);
+
                 break;
 
             case EnemyState::CHASING:
-                    
+                    //std::cout<<"IN chasing" <<std::endl; 
                     if (enemy.path.empty()) {
                         enemy.state = EnemyState::IDLE; // Transition back to IDLE state
                     }
-                
                 break;
         }
+        
     }
+    
+    
+
+
 
 
     
 
 
-    void EnemyManager::UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletManager& bulletManager) {
+    void EnemyManager::UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletManager& bulletManager, const BoundingBox &playerBody) {
         for (auto& enemy : enemies) {
             if (!enemy.active) continue;
-            bool playerEnemyCollision = CheckPlayerSingleEnemyCollision(playerPosition, enemy, 2.0f);
             
+            // Update the enemy ray's origin and direction
+            enemy.ray.position = enemy.position;
+            enemy.rayPlayerPosition = playerPosition;
+           
+            enemy.ray.direction = Vector3Normalize(Vector3Subtract(playerPosition, enemy.position));
 
-            UpdateEnemyState(enemy, playerPosition, openPositions, maze, n, m, blockSize);
+            bool rayHitsPlayer = false;
+            bool isObstructed = false;
             
-            switch (enemy.state) {
-                case EnemyState::IDLE:
-                   std::cout<<"IN idle"<<std::endl;
-                    CalculatePathToRandomTarget(enemy, openPositions, maze, n, m, blockSize);
+            
+            for (const auto& box : wallBoundingBoxes) {
+                RayCollision collision = GetRayCollisionBox(enemy.ray, box);
+                if (collision.hit) {
+                    if (collision.distance < Vector3Distance(enemy.ray.position, playerPosition)) {
+                        isObstructed = true;
+                        break;
+                    }
+                    
+                }
+              
+              if (isObstructed) {
                     break;
-
-                case EnemyState::ATTACKING:
-                    std::cout<<"IN attack"<<std::endl;
-
-                    HandleAttackState(enemy, playerPosition, bulletManager);
-                    break;
-                case EnemyState::CHASING:
-                    std::cout<<"IN chasing" <<std::endl; 
-                    break;
+                }
             }
+
+            if(!isObstructed){
+                // Ray collision with player
+                RayCollision playerCollision = GetRayCollisionBox(enemy.ray, playerBody);
+                rayHitsPlayer = playerCollision.hit;
+            
+            }
+           
+       
+            bool playerEnemyCollision = CheckPlayerSingleEnemyCollision(playerBody, enemy.body);
+            
+
+            UpdateEnemyState(enemy, playerPosition, openPositions, maze, n, m, blockSize, rayHitsPlayer, bulletManager);
             
             
             if(playerEnemyCollision == false){
-                
                 MoveEnemyAlongPath(enemy);
             }else{
                 std::cout<< "colliding with player" << std::endl;
@@ -352,7 +283,8 @@ namespace EnemySystem {
     void EnemyManager::DrawEnemies() {
         for (int i = 0; i < MAX_ENEMIES; ++i) {
             if (enemies[i].active) {
-                DrawCube(enemies[i].position, 1.0f, 2.5f, 1.0f, BLUE); // Simple blue cube for enemy
+               DrawCube(enemies[i].position, 1.0f, 2.5f, 1.0f, BLUE); // Simple blue cube for enemy
+                
                 
                 
                 // Visualization of the path (with safety check)
@@ -361,15 +293,25 @@ namespace EnemySystem {
                         // Draw a line from the current point to the next point in the path
                         DrawLine3D(enemies[i].path[j], enemies[i].path[j + 1], BLACK);
                     }
-                }   
+                }
+
+                
+                 
+                
             }
         }
     }
-
+    
+   
     void EnemyManager::PlaceEnemy(int index, Vector3 position) {
         if (index >= 0 && index < MAX_ENEMIES) {
             enemies[index].position = position;
             enemies[index].active = true;
+            
+            // Update the enemy's bounding box
+            Vector3 halfSize = Vector3Scale((Vector3){1.0f, 2.5f, 1.0f}, 0.5f);  // Adjust size as needed
+            enemies[index].body.min = Vector3Subtract(position, halfSize);
+            enemies[index].body.max = Vector3Add(position, halfSize);
         }
     }
     

@@ -3,14 +3,18 @@
     #include <random>
     #include "raylib.h"
     #include "game.h"
-    #include "maze_generator.h"
-    #include "raymath.h"
-    #include "collision.h"
-    #include "player_camera.h"
-    #include "bullet.h"
-    #include "enemy.h"
-    #include "ammobox.h"
-    #include "healthbox.h"
+    
+    
+ 
+    
+ 
+    #include "../maze/maze_generator.h"
+    #include "../collision/collision.h"
+    #include "../camera/player_camera.h"
+    #include "../entities/bullet/bullet.h"
+    #include "../entities/enemy/enemy.h"
+    #include "../entities/ammobox/ammobox.h"
+    #include "../entities/healthbox/healthbox.h"
     
     #define LIGHTRED        (Color){ 230, 41, 55, 128 }     
 
@@ -39,11 +43,23 @@
         std::vector<Vector3> openPositions; // Vector to store open positions
 
         std::vector<Vector3> openPositionsForItems;
+        
+        
+        std::vector<BoundingBox> wallBoundingBoxes;
+        BoundingBox endpointBoundingBox;
+        
+        BoundingBox outOfBoundsBox;
+
+
+
+        float wallHeight = 3.0f; // Height of the walls
+        float floorThickness = 0.1f; // Thickness of the floor
+
      
         
         
         
-        PlayerCamera playerCamera(0.1f, 4.0f);
+        PlayerCamera playerCamera(0.1f, 4.0f, 2.0f, 1.0f);
         std::pair<int, int> endCoords;
         
         BulletSystem::BulletManager bulletManager;
@@ -101,6 +117,49 @@
             std::cout << "Level " << level << std::endl;
         }
         
+        
+        
+        // Function to initialize the out-of-bounds bounding box
+        void InitializeOutOfBoundsBox(float mazeWidth, float mazeHeight, float buffer) {
+            Vector3 center = {mazeWidth / 2.0f, 0.0f, mazeHeight / 2.0f};
+            Vector3 size = {mazeWidth + buffer, wallHeight, mazeHeight + buffer}; // Buffer on each side
+            outOfBoundsBox = {
+                Vector3Subtract(center, Vector3Scale(size, 0.5f)), 
+                Vector3Add(center, Vector3Scale(size, 0.5f))
+            };
+        }
+        
+        
+        void GenerateWallBoundingBoxes() {
+            GameScreen::wallBoundingBoxes.clear();
+            for (int i = 0; i < GameScreen::n; ++i) {
+                for (int j = 0; j < GameScreen::m; ++j) {
+                    if (GameScreen::maze[i][j] == 1 || GameScreen::maze[i][j] == 2) {
+                        Vector3 wallPosition = {(float)j * GameScreen::playerCamera.blockSize, 
+                                                 GameScreen::wallHeight / 2, 
+                                                 (float)i * GameScreen::playerCamera.blockSize};
+                        Vector3 halfSize = {GameScreen::playerCamera.blockSize / 2, 
+                                            GameScreen::wallHeight / 2, 
+                                            GameScreen::playerCamera.blockSize / 2};
+                        BoundingBox box = {Vector3Subtract(wallPosition, halfSize), 
+                                           Vector3Add(wallPosition, halfSize)};
+
+                        // Distinguish between regular walls and the endpoint
+                        if (GameScreen::maze[i][j] == 1) {
+                            GameScreen::wallBoundingBoxes.push_back(box);
+                        } else if (GameScreen::maze[i][j] == 2) {
+                            GameScreen::endpointBoundingBox = box;
+                        }
+                    }
+                }
+            }
+        }
+
+        
+        
+        
+
+        
 
         void InitGame() {
             enemyManager.Reset();
@@ -108,31 +167,23 @@
             ammoBoxManager.Reset();
             healthBoxManager.Reset();
             
-            
             updateMazeSize();
             auto startCoords = InitializeMaze();
             playerCamera.InitializeCamera(startCoords);
             openPositionsForItems = openPositions;
             enemyManager.InitializeEnemies(openPositions);
-            
-            
-            
-            
-            
-            
             ammoBoxManager.InitializeAmmoBoxes(openPositionsForItems);
-            healthBoxManager.InitializeHealthBoxes(openPositionsForItems);
-            
+            healthBoxManager.InitializeHealthBoxes(openPositionsForItems); 
 
-            //enemyManager.InitializeEnemies(maze, n, m, GameScreen::playerCamera.blockSize);
-           
+            GenerateWallBoundingBoxes();
             
+            enemyManager.SetWallBoundingBoxes(GameScreen::wallBoundingBoxes);
             
+            float mazeWidth = m * playerCamera.blockSize;
+            float mazeHeight = n * playerCamera.blockSize;
+            InitializeOutOfBoundsBox(mazeWidth, mazeHeight, 10.0f); // 10 units buffer around the maze
 
-                        
-          
 
-                    
 
         }
 
@@ -141,16 +192,11 @@
             
             
             
-            auto exitpoint = playerCamera.UpdateCamera(maze, n, m, enemyManager);
+            auto exitpoint = playerCamera.UpdateCamera(wallBoundingBoxes, endpointBoundingBox, enemyManager.enemies, enemyManager.MAX_ENEMIES);
             if(exitpoint == 2 && IsKeyPressed(KEY_R)){
                 level += 1;
                 InitGame();
-                //updateMazeSize();
-                //auto newStartCoords = InitializeMaze();
-                //playerCamera.InitializeCamera(newStartCoords);   
-                //enemyManager.InitializeEnemies(openPositions);
-                //ammoBoxManager.InitializeAmmoBoxes(openPositions);
-                //healthBoxManager.InitializeHealthBoxes(openPositions);
+                
 
 
             }    
@@ -193,22 +239,35 @@
                 }
             }
             
-            bulletManager.UpdateBullets(maze, n, m, GameScreen::playerCamera.blockSize);
+            bulletManager.UpdateBullets(wallBoundingBoxes, endpointBoundingBox);
             
-            CollisionHandling::CheckBulletEnemyCollision(bulletManager, enemyManager);
-            //CollisionHandling::CheckBulletPlayerCollision(bulletManager, playerCamera.camera.position);
+            bulletManager.CheckBulletOutOfBounds(outOfBoundsBox);
+
+            
+            CollisionHandling::CheckBulletEnemyCollision(bulletManager.bullets, bulletManager.MAX_BULLETS, enemyManager.enemies, enemyManager.MAX_ENEMIES);
+
+
             
             // Check for bullet-player collision
-            if (CollisionHandling::CheckBulletPlayerCollision(bulletManager, playerCamera.camera.position, playerHealth)) {
+            if (CollisionHandling::CheckBulletPlayerCollision(bulletManager.bullets, bulletManager.MAX_BULLETS, playerCamera.playerBody, playerHealth)) {
                 isRedFlashActive = true; // Activate the red flash
                 redFlashTimer = redFlashDuration; // Reset the timer
                 
             }
             
+                
+
+            
             // check collision between player and ammo box
-            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.camera.position, ammoBoxManager, bulletManager, 2.0f);
+            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.playerBody, ammoBoxManager.ammoBoxes, 
+            ammoBoxManager.MAX_AMMO_BOXES, bulletManager.PistolAmmo, bulletManager.PistolAmmoCapacity, 
+            bulletManager.ShotgunAmmo, bulletManager.ShotgunAmmoCapacity, 
+            bulletManager.MachineGunAmmo, bulletManager.MachineGunAmmoCapacity);
+            
+            
+
             //check collision between player and health box
-            CollisionHandling:: CheckPlayerHealthBoxCollision(playerCamera.camera.position, healthBoxManager, playerHealth, maxPlayerHealth, 2.0f);
+            CollisionHandling:: CheckPlayerHealthBoxCollision(playerCamera.playerBody, healthBoxManager.healthBoxes, healthBoxManager.MAX_HEALTH_BOXES, playerHealth, maxPlayerHealth);
             
                 
 
@@ -221,7 +280,7 @@
                 }
             }
             
-            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager);
+            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager, playerCamera.playerBody);
             
             
             
@@ -233,12 +292,6 @@
     void DrawGame() {
         ClearBackground(BLACK);
         
-        float wallHeight = 3.0f; // Height of the walls
-        float floorThickness = 0.1f; // Thickness of the floor
-        
-        
-    
-
         BeginMode3D(GameScreen::playerCamera.camera);
         
         
@@ -310,6 +363,8 @@
 
 
     }
+    
+
 
 
     void UnloadGame() {
@@ -317,6 +372,7 @@
         bulletManager.Reset();
         ammoBoxManager.Reset();
         healthBoxManager.Reset();
+        level = 1;
        
 
     }

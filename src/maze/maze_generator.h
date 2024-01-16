@@ -4,7 +4,10 @@
 #include <utility>
 #include <vector>
 
-#include "common.h"
+#include "../common.h"
+
+
+
 namespace MazeGenerator {
 
     struct Point {

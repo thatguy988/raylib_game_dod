@@ -1,10 +1,10 @@
 #include "raylib.h"
-#include "game.h"
+#include "../game/game.h"
+#include "../pause_menu/pause_menu.h"
+#include "../main_menu/main_menu.h"
+#include "../common.h"
 
-enum GameState {
-    MAIN_MENU,
-    GAME_SCREEN
-};
+
 
 int main(void) {
     // Initialization
@@ -23,34 +23,24 @@ int main(void) {
         // Update
         //----------------------------------------------------------------------------------
         if (currentGameState == MAIN_MENU) {
-            if (IsKeyPressed(KEY_DOWN)) {
-                menuOption++;
-                if (menuOption > 2) menuOption = 0;
-            }
-            if (IsKeyPressed(KEY_UP)) {
-                menuOption--;
-                if (menuOption < 0) menuOption = 2;
-            }
-
-            if (keyReleased && IsKeyPressed(KEY_ENTER)) {
-                if (menuOption == 0) {
-                    currentGameState = GAME_SCREEN;
-                    GameScreen::InitGame();
-                    //Sleep(200);
-                } else if (menuOption == 2) {
-                    CloseWindow();
-                    return 0;
-                }
-                keyReleased = false;
-            }else if (!IsKeyDown(KEY_ENTER)){
-                keyReleased = true;
+            GameState newGameState = MainMenu::UpdateMainMenu();
+            if (newGameState == GAME_SCREEN){
+                GameScreen::InitGame();
+                currentGameState = newGameState;
             }
         } else if (currentGameState == GAME_SCREEN) {
             GameScreen::UpdateGame();
             if (IsKeyPressed(KEY_BACKSPACE)) {
-                currentGameState = MAIN_MENU;
-                //Sleep(200);
-                // Optional: Add any code here to reset or unload the game screen
+                currentGameState = PAUSE_MENU;
+                PauseMenu::InitPauseMenu();
+            }
+        } else if (currentGameState == PAUSE_MENU){
+            GameState newGameState = PauseMenu::UpdatePauseMenu();
+            if (newGameState == MAIN_MENU){
+                GameScreen::UnloadGame();
+                currentGameState = newGameState;   
+            } else if (newGameState == GAME_SCREEN){
+                currentGameState = newGameState;
             }
         }
         //----------------------------------------------------------------------------------
@@ -61,24 +51,13 @@ int main(void) {
             ClearBackground(RAYWHITE);
 
             if (currentGameState == MAIN_MENU) {
-                
-                const char* menuOptions[] = {"Start", "Load", "Quit"};
-                int numberOfOptions = sizeof(menuOptions) / sizeof(menuOptions[0]);
-                
-                
-                // Draw main menu
-                DrawText("Main Menu", 350, 100, 20, BLACK);
-                
-                //Draw menu options 
-                for(int i = 0; i < numberOfOptions; ++i){
-                    Color optionColor = (menuOption == i) ? RED : BLACK;
-                    DrawText(menuOptions[i], 350, 150 + 30 * i, 20, optionColor);
-                }
-                
+                MainMenu::DrawMainMenu();
             } else if (currentGameState == GAME_SCREEN) {
-                // Draw game screen
                 GameScreen::DrawGame();
+            } else if (currentGameState == PAUSE_MENU){
+                PauseMenu::DrawPauseMenu();
             }
+                
         EndDrawing();
         //----------------------------------------------------------------------------------
     }

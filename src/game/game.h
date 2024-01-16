@@ -2,7 +2,10 @@
 #define GAME_H
 
 #include <utility>
-#include "common.h"
+#include <vector>
+
+#include "../common.h"
+
 
  
 
@@ -19,6 +22,10 @@ void UnloadGame();
 void updateMazeSize();
 
 std::pair<int, int> InitializeMaze();
+
+
+
+
 void InitializeCamera();
 
 }
