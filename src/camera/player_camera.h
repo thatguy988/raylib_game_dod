@@ -1,6 +1,7 @@
 #ifndef PLAYER_CAMERA_H
 #define PLAYER_CAMERA_H
 
+#include <memory>
 #include <utility>
 #include <iostream>
 
@@ -29,10 +30,10 @@ namespace GameScreen {
         PlayerCamera(float camSpeed, float blkSize, float height, float width);
         void InitializeCamera(std::pair<int, int> startCoords);
         
-        
+        int UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies);
 
-        int UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::Enemy enemies[], int numEnemies);
-        float GetDistanceToClosestEnemy(const Vector3& position, EnemySystem::Enemy enemies[], int numEnemies);
+
+        float GetDistanceToClosestEnemy(const Vector3& position, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies);
         
     };
 

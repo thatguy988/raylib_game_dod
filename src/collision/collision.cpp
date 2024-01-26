@@ -44,15 +44,14 @@ namespace CollisionHandling {
     }
 
     
-    
-    
-    bool CheckBulletEnemyCollision(BulletSystem::Bullet bullets[], int numBullets, EnemySystem::Enemy enemies[], int numEnemies) {
+    bool CheckBulletEnemyCollision(BulletSystem::Bullet bullets[], int numBullets, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies) {
         for (int i = 0; i < numBullets; ++i) {
             if (bullets[i].active && bullets[i].playerbullet == true) {
-                for (int j = 0; j < numEnemies; ++j) {
-                    if (enemies[j].active) {
+                for (auto& enemy : enemies) {
+                    if (enemy->active) {
                         // Check if bullet position overlaps with enemy position
-                        if (CheckCollisionBoxSphere(enemies[j].body, bullets[i].position, bullets[i].radius)) {
+                        if (CheckCollisionBoxSphere(enemy->body, bullets[i].position, bullets[i].radius)) {
+                            // Collision logic
                             switch (bullets[i].weaponType) {
                                 case BulletSystem::WeaponType::PISTOL:
                                     std::cout << "HIT BY PISTOL" << std::endl;
@@ -68,7 +67,7 @@ namespace CollisionHandling {
                             }
 
                             bullets[i].active = false; // Deactivate the bullet
-                            enemies[j].active = false;  // Deactivate the enemy
+                            enemy->active = false;    // Deactivate the enemy
                             return true; // Collision detected
                         }
                     }
@@ -77,7 +76,6 @@ namespace CollisionHandling {
         }
         return false; // No collision detected
     }
-
 
     
     bool CheckBulletPlayerCollision(BulletSystem::Bullet bullets[], int numBullets, const BoundingBox &playerBody, int& playerHealth) {
@@ -103,10 +101,10 @@ namespace CollisionHandling {
     }
 
     
-    bool CheckPlayerEnemyCollision(const BoundingBox &playerBody, EnemySystem::Enemy enemies[], int numEnemies) {
-        for (int i = 0; i < numEnemies; ++i) {
-            if (enemies[i].active) {
-                if (CheckCollisionBoxes(playerBody, enemies[i].body)) {
+    bool CheckPlayerEnemyCollision(const BoundingBox &playerBody, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies) {
+        for (auto& enemy : enemies) {
+            if (enemy->active) {
+                if (CheckCollisionBoxes(playerBody, enemy->body)) {
                     // Collision logic
                     return true; // Collision detected
                 }
@@ -116,21 +114,20 @@ namespace CollisionHandling {
     }
     
     
-    
-    bool CheckPlayerAmmoBoxCollision(
+     bool CheckPlayerAmmoBoxCollision(
         const BoundingBox &playerBody, 
-        AmmoSystem::AmmoBox ammoBoxes[], int numAmmoBoxes, 
+        std::vector<AmmoSystem::AmmoBox>& ammoBoxes, 
         int &pistolAmmo, int pistolAmmoCapacity, 
         int &shotgunAmmo, int shotgunAmmoCapacity, 
         int &machineGunAmmo, int machineGunAmmoCapacity
     ) {
-        for (int i = 0; i < numAmmoBoxes; ++i) {
-            if (ammoBoxes[i].active) {
-                if (CheckCollisionBoxes(playerBody, ammoBoxes[i].body)) {
+        for (auto& ammobox : ammoBoxes) {
+            if (ammobox.active) {
+                if (CheckCollisionBoxes(playerBody, ammobox.body)) {
                     bool maxAmmoReached = false;
 
                     // Handle ammo collection based on the ammo box type
-                    switch (ammoBoxes[i].ammoType) {
+                    switch (ammobox.ammoType) {
                         case BulletSystem::WeaponType::PISTOL:
                             if (pistolAmmo < pistolAmmoCapacity) {
                                 pistolAmmo = std::min(pistolAmmo + 10, pistolAmmoCapacity);
@@ -157,7 +154,7 @@ namespace CollisionHandling {
                     }
 
                     if (!maxAmmoReached) {
-                        ammoBoxes[i].Deactivate(); // Remove ammo box after collision
+                        ammobox.Deactivate(); // Remove ammo box after collision
                         return true;
                     }
                 }
@@ -166,29 +163,19 @@ namespace CollisionHandling {
 
         return false; // No collision detected
     }
-
-
-   
     
     
-    bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody, HealthSystem::HealthBox healthBoxes[], int numHealthBoxes, int& playerHealth, int maxPlayerHealth) {
-        if(playerHealth != maxPlayerHealth){
-            for (int i = 0; i < numHealthBoxes; ++i) {
-                if (healthBoxes[i].active && CheckCollisionBoxes(playerBody, healthBoxes[i].body)) {
-                    playerHealth = std::min(playerHealth + healthBoxes[i].healthPoints, maxPlayerHealth);
-                    healthBoxes[i].Deactivate(); // Deactivate the health box after collection
+    bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody, std::vector<HealthSystem::HealthBox>& healthBoxes, int& playerHealth, int maxPlayerHealth) {
+        if (playerHealth != maxPlayerHealth) {
+            for (auto& healthBox : healthBoxes) {
+                if (healthBox.active && CheckCollisionBoxes(playerBody, healthBox.body)) {
+                    playerHealth = std::min(playerHealth + healthBox.healthPoints, maxPlayerHealth);
+                    healthBox.Deactivate(); // Deactivate the health box after collection
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    
-    
-
-
-    
-    
+    }   
     
 }

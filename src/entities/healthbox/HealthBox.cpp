@@ -3,12 +3,22 @@
 
 using namespace HealthSystem;
 
-// Constructor for HealthBoxManager
 HealthBoxManager::HealthBoxManager() {
-    for (int i = 0; i < MAX_HEALTH_BOXES; ++i) {
-        healthBoxes[i] = HealthBox();
-    }
+    // The constructor can be empty if you are dynamically adding health boxes
 }
+
+
+void HealthBoxManager::SetMaxHealthBoxes() {
+        
+        std::random_device rd;  // Seed with a real random value, if available
+        std::mt19937 gen(rd());
+
+        std::uniform_int_distribution<> dis(1, 5);  // Random number between 1 and 5
+        MAX_HEALTH_BOXES = dis(gen);
+
+        std::cout << "New MAX_HEALTH_BOXES set to: " << MAX_HEALTH_BOXES << std::endl;
+    }
+
 
 // Activate the health box at a specified position with a specified health amount
 void HealthBox::Activate(Vector3 pos, int health) {
@@ -31,7 +41,7 @@ void HealthBox::Deactivate() {
 }
 
 // Draw the health box if it's active
-void HealthBox::Draw() {
+void HealthBox::Draw() const {
     if (active) {
         DrawCube(position, 1.0f, 1.0f, 1.0f, PINK); // Adjust size and color as needed
     }
@@ -49,13 +59,20 @@ void HealthBoxManager::InitializeHealthBoxes(std::vector<Vector3>& availablePosi
     for (int i = 0; i < MAX_HEALTH_BOXES && !availablePositions.empty(); ++i) {
         std::uniform_int_distribution<> positionDist(0, availablePositions.size() - 1);
         int randomIndex = positionDist(gen);
-
+        
+        
         if (probabilityDist(gen) <= healthBoxPlacementProbability) {
-            healthBoxes[i].Activate(availablePositions[randomIndex], RandomHealthValue());
+            HealthBox newBox;
+            newBox.Activate(availablePositions[randomIndex], RandomHealthValue());
+            healthBoxes.push_back(newBox);
             availablePositions.erase(availablePositions.begin() + randomIndex);
         }
+
+      
     }
 }
+
+
 
 // Randomly choose the health value for a health box (10, 25, or 50)
 int HealthBoxManager::RandomHealthValue() {
@@ -75,17 +92,19 @@ int HealthBoxManager::RandomHealthValue() {
     }
 }
 
+
+
+    
+    
 // Draw all active health boxes
 void HealthBoxManager::DrawHealthBoxes() {
-    for (int i = 0; i < MAX_HEALTH_BOXES; ++i) {
-        healthBoxes[i].Draw();
+    for (const auto& healthbox : healthBoxes) {
+        healthbox.Draw();
     }
 }
 
+
 void HealthBoxManager::Reset() {
-            for (auto& healthBox : healthBoxes) {
-                healthBox.active = false;
-                healthBox.position = Vector3{0, 0, 0};
-                healthBox.healthPoints = 0;
-            }
-        }
+    healthBoxes.clear(); // This will remove all health boxes
+}
+

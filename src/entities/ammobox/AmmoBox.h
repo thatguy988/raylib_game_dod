@@ -24,21 +24,24 @@ namespace AmmoSystem {
 
         void Activate(Vector3 pos);
         void Deactivate();
-        void Draw();
+        void Draw() const;
     };
 
     class AmmoBoxManager {
     public:
-        static constexpr int MAX_AMMO_BOXES = 5; // Adjust how many boxes we want at one time
-        AmmoBox ammoBoxes[MAX_AMMO_BOXES];
+    
+        std::vector<AmmoBox> ammoBoxes;
+        void SetMaxAmmoBoxes();
 
         AmmoBoxManager();
         void InitializeAmmoBoxes(std::vector<Vector3>& openPositions);
         void DrawAmmoBoxes();
         void Reset();
+    private:
+        int MAX_AMMO_BOXES;
+
     };
 
 } // namespace AmmoSystem
 
 #endif // AMMO_BOX_H
-

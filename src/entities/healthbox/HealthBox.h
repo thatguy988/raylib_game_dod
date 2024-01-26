@@ -4,6 +4,7 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <vector>
+#include <iostream>
 
 namespace HealthSystem {
 
@@ -24,22 +25,24 @@ namespace HealthSystem {
 
         void Activate(Vector3 pos, int health);
         void Deactivate();
-        void Draw();
+        void Draw() const;
     };
 
     class HealthBoxManager {
     public:
-        static constexpr int MAX_HEALTH_BOXES = 5; // Adjust how many boxes we want at one time
-        HealthBox healthBoxes[MAX_HEALTH_BOXES];
+        std::vector<HealthBox> healthBoxes;
+        void SetMaxHealthBoxes();
 
         HealthBoxManager();
         void InitializeHealthBoxes(std::vector<Vector3>& openPositions);
         void DrawHealthBoxes();
         int RandomHealthValue();
         void Reset();
+    private:
+        int MAX_HEALTH_BOXES; 
+
     };
 
 } // namespace HealthSystem
 
 #endif // HEALTH_BOX_H
-

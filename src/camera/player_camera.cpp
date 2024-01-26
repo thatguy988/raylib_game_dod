@@ -8,7 +8,7 @@ namespace GameScreen {
     GameScreen::PlayerCamera::PlayerCamera(float camSpeed, float blkSize, float height, float width) 
     : cameraSpeed(camSpeed), blockSize(blkSize), playerHeight(height), playerWidth(width) {
         
-        camera = {0}; // Initialize your camera
+        camera = {0}; // Initialize camera
         playerBody = {0}; // Initialize the bounding box representing the player's body
     }
 
@@ -29,8 +29,10 @@ namespace GameScreen {
         playerBody.min = Vector3Subtract(camera.position, halfSize);
         playerBody.max = Vector3Add(camera.position, halfSize);
     }
-    
-    int PlayerCamera::UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::Enemy enemies[], int numEnemies) {
+
+
+
+    int PlayerCamera::UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies){
         
         Vector3 forward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
         Vector3 right = Vector3Normalize(Vector3CrossProduct(forward, camera.up));
@@ -51,11 +53,11 @@ namespace GameScreen {
 
         // Check for collision at the new position
         int collisionType = CollisionHandling::CheckCollision(potentialPlayerBody, wallBoundingBoxes, endpointBoundingBox);
-        bool playerEnemyCollision = CollisionHandling::CheckPlayerEnemyCollision(playerBody, enemies,numEnemies);
+        bool playerEnemyCollision = CollisionHandling::CheckPlayerEnemyCollision(playerBody, enemies);
        
         // Calculate distance to the closest enemy from current and potential positions
-        float distanceToEnemyFromCurrent = GetDistanceToClosestEnemy(camera.position, enemies, numEnemies);
-        float distanceToEnemyFromPotential = GetDistanceToClosestEnemy(potentialNewPosition, enemies, numEnemies);
+        float distanceToEnemyFromCurrent = GetDistanceToClosestEnemy(camera.position, enemies);
+        float distanceToEnemyFromPotential = GetDistanceToClosestEnemy(potentialNewPosition, enemies);
         
     
         // Collision resolution and position update
@@ -77,11 +79,15 @@ namespace GameScreen {
     }
     
     
-    float PlayerCamera::GetDistanceToClosestEnemy(const Vector3& position, EnemySystem::Enemy enemies[], int numEnemies) {
+    
+    
+    
+    
+    float PlayerCamera::GetDistanceToClosestEnemy(const Vector3& position, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies) {
         float minDistance = std::numeric_limits<float>::max();
-        for (int i = 0; i < numEnemies; ++i) {
-            if (enemies[i].active) {
-                float distance = Vector3Distance(position, enemies[i].position);
+        for (const auto& enemy : enemies) {
+            if (enemy->active) {
+                float distance = Vector3Distance(position, enemy->position);
                 if (distance < minDistance) {
                     minDistance = distance;
                 }
@@ -89,6 +95,8 @@ namespace GameScreen {
         }
         return minDistance;
     }
+
+    
     
     void HandleCameraRotation(Vector3 &forward, Camera3D &camera, float turnSpeed) {
         if (IsKeyDown(KEY_RIGHT)) {

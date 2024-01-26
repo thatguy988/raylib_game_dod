@@ -11,12 +11,15 @@ int main(void) {
     //--------------------------------------------------------------------------------------
     const int screenWidth = 1000;
     const int screenHeight = 600;
-    InitWindow(screenWidth, screenHeight, "raylib - Main Menu Example");
+    InitWindow(screenWidth, screenHeight, "raylib - Game");
     SetTargetFPS(60);
 
+    /*
     int menuOption = 0;
-    GameState currentGameState = MAIN_MENU;
     bool keyReleased = true; // variable to track if key is released
+    */
+    GameState currentGameState = MAIN_MENU;
+
 
     // Main game loop
     while (!WindowShouldClose()) {

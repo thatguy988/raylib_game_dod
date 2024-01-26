@@ -5,10 +5,22 @@ using namespace AmmoSystem;
 
 // Constructor for AmmoBoxManager
 AmmoBoxManager::AmmoBoxManager() {
-    for (int i = 0; i < MAX_AMMO_BOXES; ++i) {
-        ammoBoxes[i] = AmmoBox();
-    }
+    
 }
+
+
+
+void AmmoBoxManager::SetMaxAmmoBoxes() {
+        
+        std::random_device rd;  // Seed with a real random value, if available
+        std::mt19937 gen(rd());
+
+        std::uniform_int_distribution<> dis(1, 5);  // Random number between 1 and 5
+        MAX_AMMO_BOXES = dis(gen);
+
+        std::cout << "New MAX_AMMO_BOXES set to: " << MAX_AMMO_BOXES << std::endl;
+    }
+
 
 // Activate the ammo box at a specified position
 void AmmoBox::Activate(Vector3 pos) {
@@ -31,7 +43,7 @@ void AmmoBox::Deactivate() {
 }
 
 // Draw the ammo box if it's active
-void AmmoBox::Draw() {
+void AmmoBox::Draw() const {
     if (active) {
         DrawCube(position, 1.0f, 1.0f, 1.0f, BROWN); // Adjust size and color as needed
     }
@@ -43,34 +55,37 @@ void AmmoBoxManager::InitializeAmmoBoxes(std::vector<Vector3>& availablePosition
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> probabilityDist(0.0f, 1.0f);
 
-    const float ammoBoxPlacementProbability = 0.6f; // Adjust as needed
+    const float ammoBoxPlacementProbability = 1.0f; // Adjust as needed
 
 
     for (int i = 0; i < MAX_AMMO_BOXES && !availablePositions.empty(); ++i) {
         std::uniform_int_distribution<> positionDist(0, availablePositions.size() - 1);
         int randomIndex = positionDist(gen);
-
+        
+        
+        
         if (probabilityDist(gen) <= ammoBoxPlacementProbability) {
-            ammoBoxes[i].Activate(availablePositions[randomIndex]);
+            AmmoBox newBox;
             std::uniform_int_distribution<int> weaponTypeDist(0, 2); // 0 for Pistol, 1 for Shotgun, 2 for MachineGun
-            ammoBoxes[i].ammoType = static_cast<BulletSystem::WeaponType>(weaponTypeDist(gen));
+            newBox.ammoType = static_cast<BulletSystem::WeaponType>(weaponTypeDist(gen));
+            newBox.Activate(availablePositions[randomIndex]);
+            ammoBoxes.push_back(newBox);
             availablePositions.erase(availablePositions.begin() + randomIndex);
         }
+
     }
 }
 
-// Draw all active ammo boxes
+
+
 void AmmoBoxManager::DrawAmmoBoxes() {
-    for (int i = 0; i < MAX_AMMO_BOXES; ++i) {
-        ammoBoxes[i].Draw();
+    for (const auto& ammobox : ammoBoxes) {
+        ammobox.Draw();
     }
 }
 
 
-        void AmmoBoxManager::Reset() {
-            for (auto& ammoBox : ammoBoxes) {
-                ammoBox.active = false;
-                ammoBox.position = Vector3{0, 0, 0};
-                ammoBox.ammoType = BulletSystem::WeaponType::NONE;
-            }
-        }
+
+void AmmoBoxManager::Reset() {
+     ammoBoxes.clear();       
+}
