@@ -63,8 +63,11 @@
         std::pair<int, int> endCoords;
         std::pair<int, int> startCoords; 
 
-        
-        BulletSystem::BulletManager bulletManager;
+        int MAX_BULLETS = 200;
+        BulletSystem::BulletData bulletManager;
+        BulletSystem::SparseSet sparseSet(MAX_BULLETS);
+
+        BulletSystem::WeaponManager weaponsManager;
         EnemySystem::EnemyManager enemyManager;
         AmmoSystem::AmmoBoxData ammoBoxManager;
         HealthSystem::HealthBoxData healthBoxManager;
@@ -201,13 +204,13 @@
             char ammoText[50]; // Buffer to hold the formatted ammo text
             switch (currentWeapon) {
                 case BulletSystem::WeaponType::PISTOL:
-                    sprintf(ammoText, "Pistol Ammo: %d/%d", bulletManager.PistolAmmo, bulletManager.PistolAmmoCapacity);
+                    sprintf(ammoText, "Pistol Ammo: %d/%d", weaponsManager.PistolAmmo, weaponsManager.PistolAmmoCapacity);
                     break;
                 case BulletSystem::WeaponType::SHOTGUN:
-                    sprintf(ammoText, "Shotgun Ammo: %d/%d", bulletManager.ShotgunAmmo, bulletManager.ShotgunAmmoCapacity);
+                    sprintf(ammoText, "Shotgun Ammo: %d/%d", weaponsManager.ShotgunAmmo, weaponsManager.ShotgunAmmoCapacity);
                     break;
                 case BulletSystem::WeaponType::MACHINE_GUN:
-                    sprintf(ammoText, "Machine Gun Ammo: %d/%d", bulletManager.MachineGunAmmo, bulletManager.MachineGunAmmoCapacity);
+                    sprintf(ammoText, "Machine Gun Ammo: %d/%d", weaponsManager.MachineGunAmmo, weaponsManager.MachineGunAmmoCapacity);
                     break;
                 default:
                     // Handling for NONE or other cases, if necessary
@@ -245,54 +248,11 @@
             }
         }
         
-        
-        
-        void HandleWeaponInputAndShooting(BulletSystem::BulletManager& bulletManager, const PlayerCamera& playerCamera, BulletSystem::WeaponType& currentWeapon) {
-            if (IsKeyPressed(KEY_ONE)) currentWeapon = BulletSystem::WeaponType::PISTOL;
-            if (IsKeyPressed(KEY_TWO)) currentWeapon = BulletSystem::WeaponType::SHOTGUN;
-            if (IsKeyPressed(KEY_THREE)) currentWeapon = BulletSystem::WeaponType::MACHINE_GUN;
-
-            Vector3 bulletDirection = Vector3Normalize(Vector3Subtract(playerCamera.camera.target, playerCamera.camera.position));
-
-            float deltaTime = GetFrameTime(); // Get the time elapsed since the last frame
-
-            // Update timers for all weapons
-            bulletManager.machineGunLastShotTime += deltaTime;
-            bulletManager.pistolGunLastShotTime += deltaTime;
-            bulletManager.shotGunLastShotTime += deltaTime;
-
-            // Handle machine gun shooting
-            if (currentWeapon == BulletSystem::WeaponType::MACHINE_GUN && IsKeyDown(KEY_SPACE)) {
-                if (bulletManager.machineGunLastShotTime >= bulletManager.machineGunShotDelay) {
-                    bulletManager.Shoot(playerCamera.camera.position, bulletDirection, 1.0f, currentWeapon);
-                    bulletManager.machineGunLastShotTime = 0.0f; // Reset the timer
-                }
-            }
-
-            // Handle pistol shooting
-            if (currentWeapon == BulletSystem::WeaponType::PISTOL && IsKeyPressed(KEY_SPACE)) {
-                if (bulletManager.pistolGunLastShotTime >= bulletManager.pistolGunShotDelay) {
-                    bulletManager.Shoot(playerCamera.camera.position, bulletDirection, 0.1f, currentWeapon);
-                    bulletManager.pistolGunLastShotTime = 0.0f; // Reset the timer
-                }
-            }
-
-            // Handle shotgun shooting
-            if (currentWeapon == BulletSystem::WeaponType::SHOTGUN && IsKeyPressed(KEY_SPACE)) {
-                if (bulletManager.shotGunLastShotTime >= bulletManager.shotGunShotDelay) {
-                    bulletManager.Shoot(playerCamera.camera.position, bulletDirection, 1.0f, currentWeapon);
-                    bulletManager.shotGunLastShotTime = 0.0f; // Reset the timer
-                }
-            }
-        }
-            
-        
-
-        
 
         void InitGame() {
             enemyManager.Reset();
-            bulletManager.Reset();
+
+            BulletSystem::ResetBulletData(bulletManager, sparseSet);
             AmmoSystem::ResetAmmoBoxes(ammoBoxManager);
             HealthSystem::ResetHealthBoxes(healthBoxManager);
             enemyManager.SetRandomMaxEnemies(level);
@@ -324,6 +284,7 @@
                 enemyManager.InitializeEnemies(openPositions,level);
                 AmmoSystem::InitializeAmmoBoxes(ammoBoxManager, openPositionsForItems);
                 HealthSystem::InitializeHealthBoxes(healthBoxManager, openPositionsForItems); 
+                BulletSystem::InitializeBulletData(bulletManager, MAX_BULLETS);
 
                 GenerateWallBoundingBoxes();
                 
@@ -376,21 +337,19 @@
             
             
             
-            
-            
-            HandleWeaponInputAndShooting(bulletManager, playerCamera, currentWeapon);
-            
-            bulletManager.UpdateBullets(wallBoundingBoxes, endpointBoundingBox);
-            
-            bulletManager.CheckBulletOutOfBounds(outOfBoundsBox);
+            BulletSystem::HandleWeaponInputAndShooting(bulletManager, sparseSet, weaponsManager, playerCamera, currentWeapon);
 
+            BulletSystem::UpdateBullets(bulletManager, sparseSet, wallBoundingBoxes, endpointBoundingBox);
             
-            CollisionHandling::CheckBulletEnemyCollision(bulletManager.bullets, bulletManager.MAX_BULLETS, enemyManager.enemies);
+            CollisionHandling::CheckBulletOutOfBounds(bulletManager, sparseSet, outOfBoundsBox);
 
 
             
+            CollisionHandling::CheckBulletEnemyCollision(bulletManager, sparseSet, enemyManager.enemies);
+
+
             // Check for bullet-player collision
-            if (CollisionHandling::CheckBulletPlayerCollision(bulletManager.bullets, bulletManager.MAX_BULLETS, playerCamera.playerBody, playerHealth)) {
+            if (CollisionHandling::CheckBulletPlayerCollision(bulletManager, sparseSet, playerCamera.playerBody, playerHealth)) {
                 isRedFlashActive = true; // Activate the red flash
                 redFlashTimer = redFlashDuration; // Reset the timer
                 
@@ -400,10 +359,7 @@
 
             
             // check collision between player and ammo box
-            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.playerBody, ammoBoxManager, 
-            bulletManager.PistolAmmo, bulletManager.PistolAmmoCapacity, 
-            bulletManager.ShotgunAmmo, bulletManager.ShotgunAmmoCapacity, 
-            bulletManager.MachineGunAmmo, bulletManager.MachineGunAmmoCapacity);
+            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.playerBody, ammoBoxManager, weaponsManager);
             
             
 
@@ -421,7 +377,7 @@
                 }
             }
             
-            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager, playerCamera.playerBody);
+            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager, sparseSet, playerCamera.playerBody);
             
             
             
@@ -439,7 +395,7 @@
         
         DrawMaze();
         enemyManager.DrawEnemies();
-        bulletManager.DrawBullets();
+        BulletSystem::DrawBullets(bulletManager, sparseSet);
         AmmoSystem::DrawAmmoBoxes(ammoBoxManager);
         HealthSystem::DrawHealthBoxes(healthBoxManager);
         EndMode3D();
@@ -451,7 +407,7 @@
 
     void UnloadGame() {
         enemyManager.Reset();
-        bulletManager.Reset();
+        BulletSystem::ResetBulletData(bulletManager, sparseSet);
         AmmoSystem::ResetAmmoBoxes(ammoBoxManager);
         HealthSystem::ResetHealthBoxes(healthBoxManager);
         level = 1;

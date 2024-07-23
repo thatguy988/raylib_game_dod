@@ -7,6 +7,9 @@
 #include <vector>
 #include <random>
 
+namespace BulletSystem {
+    enum class WeaponType; // Forward declaration
+}
 
 namespace AmmoSystem {
 

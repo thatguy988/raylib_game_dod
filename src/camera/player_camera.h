@@ -13,6 +13,9 @@
 
 #include "../collision/collision.h"
 
+namespace EnemySystem {
+    struct Enemy;
+}
 
 namespace GameScreen {
 

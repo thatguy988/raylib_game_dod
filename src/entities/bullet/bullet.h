@@ -5,24 +5,20 @@
 #include <vector>
 #include "raylib.h"
 
-
+#include "../../camera/player_camera.h"
 #include "../../common.h"
 
 
+namespace GameScreen {
+    struct PlayerCamera; // Forward declaration
+}
 
-
-// Forward declaration of EnemySystem namespace and Enemy struct
 namespace EnemySystem {
-    struct Enemy;
-    enum class EnemyType; // Forward declaration of the EnemyType enum
-
+    enum class EnemyType; // Forward declaration
 }
 
 
 namespace BulletSystem {
-    
-    
-  
     
     enum class WeaponType {
         PISTOL,
@@ -31,64 +27,61 @@ namespace BulletSystem {
         NONE
     };
 
-    struct Bullet {
-        Vector3 position;
-        Vector3 direction;
-        float speed;
-        bool active;
-        bool playerbullet;
-        float radius; // Radius of the bullet for collision detection
-
-        
-        EnemySystem::EnemyType enemyType; // Type of enemy that shot the bullet
-
-        WeaponType weaponType;
-
-        
-
-
-        Bullet() : position({0, 0, 0}), direction({0, 0, 1}), speed(0.5f), active(false), playerbullet(false), radius(0.1f) {}
+    struct BulletData {
+        std::vector<Vector3> positions;
+        std::vector<Vector3> directions;
+        std::vector<float> speeds;
+        std::vector<bool> activeStates;
+        std::vector<bool> playerBullets;
+        std::vector<float> radii;
+        std::vector<WeaponType> weaponTypes;
+        std::vector<EnemySystem::EnemyType> enemyTypes;
     };
 
-    class BulletManager {
-    public:
-        static const int MAX_BULLETS = 100;
-        Bullet bullets[MAX_BULLETS];
-        
+    struct WeaponManager {
         float machineGunLastShotTime;
-        const float machineGunShotDelay = 0.25f; // Delay in seconds between machine gun shots
+        const float machineGunShotDelay = 0.25f;
         float shotGunLastShotTime;
         const float shotGunShotDelay = 1.0f;
         float pistolGunLastShotTime;
         const float pistolGunShotDelay = 0.5f;
         
-        //current number of bullets player is holding
         int ShotgunAmmo = 10;
         int PistolAmmo = 100;
         int MachineGunAmmo = 50;
         
-        
-        
-        //max number of bullets player can hold
-        int ShotgunAmmoCapacity = 50; 
-        int PistolAmmoCapacity = 100;
-        int MachineGunAmmoCapacity = 200;
+        const int ShotgunAmmoCapacity = 50; 
+        const int PistolAmmoCapacity = 100;
+        const int MachineGunAmmoCapacity = 200;
 
-        
-        BulletManager();
-        void UpdateBullets(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox);
-        void CheckBulletOutOfBounds(const BoundingBox& boundary);
-        void DrawBullets();
-        void Shoot(const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon);
-        void EnemyShootBullet(const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed, EnemySystem::EnemyType enemyType);
-        void Reset();
-
-    private:
-        int FindInactiveBullet();
-        void ShootBullet(const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon);
-
-
+        int shotgunPellets = 10; // Number of pellets for the shotgun
+        float spreadAngle = 10.0f; // Spread angle in degrees
     };
+
+    class SparseSet{
+    public:
+        std::vector<size_t> sparse;
+        std::vector<size_t> dense;
+        size_t capacity;
+        size_t size;
+
+        SparseSet(size_t maxCapacity);
+        void Add(size_t index);
+        void Remove(size_t index);
+        bool Contains(size_t index) const;
+    };
+
+    void InitializeBulletData(BulletData& data, size_t maxBullets);
+    void AddBullet(BulletData& data, SparseSet& set, const Vector3& position, const Vector3& direction, float speed, WeaponType weaponType, bool playerBullet, EnemySystem::EnemyType enemyType);
+    void UpdateBullets(BulletData& data, SparseSet& set, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox);
+    void DrawBullets(const BulletData& data, const SparseSet& set);
+    void ResetBulletData(BulletData& data, SparseSet& set);
+    void HandleInactiveBullets(BulletData& data, SparseSet& set);
+    int FindInactiveBullet(const BulletData& data, const SparseSet& set);
+    void Shoot(BulletData& data, SparseSet& set, WeaponManager& weaponManager, const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon, bool playerBullet);
+    void EnemyShootBullet(BulletData& data, SparseSet& set, const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed, EnemySystem::EnemyType enemyType);
+    void HandleWeaponInputAndShooting(BulletData& data, SparseSet& set, WeaponManager& weaponManager, const GameScreen::PlayerCamera& playerCamera, WeaponType& currentWeapon);
+
 
 }
 

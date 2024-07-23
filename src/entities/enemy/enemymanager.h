@@ -34,7 +34,7 @@ namespace EnemySystem {
         EnemyManager();
         void InitializeEnemies(const std::vector<Vector3>& openPositions, int currentLevel);
         
-        void UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletManager& bulletManager, const BoundingBox &playerBody);
+        void UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set, const BoundingBox &playerBody);
         void DrawEnemies();
      
         bool CheckPlayerSingleEnemyCollision(const BoundingBox &playerBody, const BoundingBox &enemyBody); 

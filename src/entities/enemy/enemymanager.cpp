@@ -95,7 +95,7 @@ namespace EnemySystem {
     }
 
     
-    void EnemyManager::UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletManager& bulletManager, const BoundingBox &playerBody) {
+    void EnemyManager::UpdateEnemies(const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set, const BoundingBox &playerBody) {
         for (auto& enemy : enemies) {
             if (!enemy->active) continue;
             
@@ -127,7 +127,7 @@ namespace EnemySystem {
             
             // Call specific methods for each enemy type using dynamic_cast
             if (auto imp = dynamic_cast<Imp*>(enemy.get())) {
-                 imp->UpdateEnemyState(*enemy, playerPosition, openPositions, maze, n, m, blockSize, rayHitsPlayer, bulletManager);
+                 imp->UpdateEnemyState(*enemy, playerPosition, openPositions, maze, n, m, blockSize, rayHitsPlayer, bulletManager, set);
                  if (!playerEnemyCollision) {
                     imp->MoveEnemyAlongPath(*enemy);
                 } else {
@@ -141,7 +141,7 @@ namespace EnemySystem {
                     std::cout<<"Demon colliding with player" << std::endl;
                 }
             }else if (auto baronofhell = dynamic_cast<BaronOfHell*>(enemy.get())){
-                baronofhell->UpdateEnemyState(*enemy,playerPosition,openPositions,maze,n,m,blockSize,rayHitsPlayer,bulletManager);
+                baronofhell->UpdateEnemyState(*enemy,playerPosition,openPositions,maze,n,m,blockSize,rayHitsPlayer,bulletManager, set);
                 if (!playerEnemyCollision) {
                     baronofhell->MoveEnemyAlongPath(*enemy);
                 } else {
@@ -149,7 +149,7 @@ namespace EnemySystem {
                 }
                 
             }else if (auto cyberdemon = dynamic_cast<Cyberdemon*>(enemy.get())){
-                cyberdemon->UpdateEnemyState(*enemy,playerPosition,openPositions,maze,n,m,blockSize,rayHitsPlayer,bulletManager);
+                cyberdemon->UpdateEnemyState(*enemy,playerPosition,openPositions,maze,n,m,blockSize,rayHitsPlayer,bulletManager, set);
                 if (!playerEnemyCollision) {
                     cyberdemon->MoveEnemyAlongPath(*enemy);
                 } else {

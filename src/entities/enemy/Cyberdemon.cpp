@@ -72,12 +72,12 @@ namespace EnemySystem {
         }
     }
     
-    void Cyberdemon::HandleAttackState(Enemy& enemy, const Vector3& playerPosition, BulletSystem::BulletManager& bulletManager) {
+    void Cyberdemon::HandleAttackState(Enemy& enemy, const Vector3& playerPosition, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
         if (enemy.shootingTimer >= enemy.shootingInterval) {
             Vector3 shootingPosition = enemy.position;
             shootingPosition.y += enemy.shootingHeightOffset; // Adjust bullet shooting height
             Vector3 shootingDirection = Vector3Normalize(Vector3Subtract(playerPosition, shootingPosition));
-            bulletManager.EnemyShootBullet(shootingPosition, shootingDirection, enemy.bulletSpeed, enemy.type);
+            BulletSystem::EnemyShootBullet(bulletManager, set, shootingPosition, shootingDirection, enemy.bulletSpeed, enemy.type);
             enemy.shootingTimer = 0.0f; // Reset the timer
         } else {
             enemy.shootingTimer += GetFrameTime(); // Update the timer
@@ -86,7 +86,7 @@ namespace EnemySystem {
     
     
     
-    void Cyberdemon::UpdateEnemyState(Enemy& enemy, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, BulletSystem::BulletManager& bulletManager) {
+    void Cyberdemon::UpdateEnemyState(Enemy& enemy, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
         switch (enemy.state) {
             case EnemyState::IDLE:
                 //std::cout<<"IN idle"<<std::endl;
@@ -107,7 +107,7 @@ namespace EnemySystem {
                 } else if (enemy.path.empty()) {
                     CalculatePathToPlayer(enemy, playerPosition, maze, n, m, blockSize);
                 }
-                HandleAttackState(enemy, playerPosition, bulletManager);
+                HandleAttackState(enemy, playerPosition, bulletManager, set);
 
                 break;
 
