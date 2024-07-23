@@ -31,21 +31,10 @@ namespace CollisionHandling {
 
     bool CheckPlayerEnemyCollision(const BoundingBox &playerBody, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies);
     
-    //bool CheckPlayerAmmoBoxCollision(const BoundingBox &playerBody, AmmoSystem::AmmoBox ammoBoxes[], int numAmmoBoxes, int &pistolAmmo, int pistolAmmoCapacity, int &shotgunAmmo, int shotgunAmmoCapacity, int &machineGunAmmo, int machineGunAmmoCapacity);
-    bool CheckPlayerAmmoBoxCollision(const BoundingBox &playerBody, std::vector<AmmoSystem::AmmoBox>& ammoBoxes, int &pistolAmmo, int pistolAmmoCapacity, int &shotgunAmmo, int shotgunAmmoCapacity, int &machineGunAmmo, int machineGunAmmoCapacity);
+    bool CheckPlayerAmmoBoxCollision(const BoundingBox &playerBody, AmmoSystem::AmmoBoxData& ammoBoxes, int &pistolAmmo, int pistolAmmoCapacity, int &shotgunAmmo, int shotgunAmmoCapacity, int &machineGunAmmo, int machineGunAmmoCapacity);
 
 
-
-
-
-
-    
-    //bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody,  HealthSystem::HealthBox healthBoxes[], int numHealthBoxes, int& playerHealth, int maxPlayerHealth);
-    bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody,  std::vector<HealthSystem::HealthBox>& healthBoxes, int& playerHealth, int maxPlayerHealth);
-
-
-
-
+    bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody,  HealthSystem::HealthBoxData& healthBoxes, int& playerHealth, int maxPlayerHealth);
 
 }
 

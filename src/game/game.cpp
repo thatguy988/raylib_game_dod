@@ -66,8 +66,8 @@
         
         BulletSystem::BulletManager bulletManager;
         EnemySystem::EnemyManager enemyManager;
-        AmmoSystem::AmmoBoxManager ammoBoxManager;
-        HealthSystem::HealthBoxManager healthBoxManager;
+        AmmoSystem::AmmoBoxData ammoBoxManager;
+        HealthSystem::HealthBoxData healthBoxManager;
         
         
         
@@ -293,11 +293,11 @@
         void InitGame() {
             enemyManager.Reset();
             bulletManager.Reset();
-            ammoBoxManager.Reset();
-            healthBoxManager.Reset();
+            AmmoSystem::ResetAmmoBoxes(ammoBoxManager);
+            HealthSystem::ResetHealthBoxes(healthBoxManager);
             enemyManager.SetRandomMaxEnemies(level);
-            ammoBoxManager.SetMaxAmmoBoxes();
-            healthBoxManager.SetMaxHealthBoxes();
+            AmmoSystem::SetMaxAmmoBoxes(ammoBoxManager);
+            HealthSystem::SetMaxHealthBoxes(healthBoxManager);
             
             
             
@@ -322,8 +322,8 @@
                 playerCamera.InitializeCamera(startCoords);
                 openPositionsForItems = openPositions;
                 enemyManager.InitializeEnemies(openPositions,level);
-                ammoBoxManager.InitializeAmmoBoxes(openPositionsForItems);
-                healthBoxManager.InitializeHealthBoxes(openPositionsForItems); 
+                AmmoSystem::InitializeAmmoBoxes(ammoBoxManager, openPositionsForItems);
+                HealthSystem::InitializeHealthBoxes(healthBoxManager, openPositionsForItems); 
 
                 GenerateWallBoundingBoxes();
                 
@@ -339,8 +339,8 @@
                 playerCamera.InitializeCamera(startCoords);
                 openPositionsForItems = openPositions;
                 enemyManager.InitializeEnemies(openPositions, level);
-                ammoBoxManager.InitializeAmmoBoxes(openPositionsForItems);
-                healthBoxManager.InitializeHealthBoxes(openPositionsForItems); 
+                AmmoSystem::InitializeAmmoBoxes(ammoBoxManager,openPositionsForItems);
+                HealthSystem::InitializeHealthBoxes(healthBoxManager, openPositionsForItems); 
                 
 
 
@@ -400,7 +400,7 @@
 
             
             // check collision between player and ammo box
-            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.playerBody, ammoBoxManager.ammoBoxes, 
+            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.playerBody, ammoBoxManager, 
             bulletManager.PistolAmmo, bulletManager.PistolAmmoCapacity, 
             bulletManager.ShotgunAmmo, bulletManager.ShotgunAmmoCapacity, 
             bulletManager.MachineGunAmmo, bulletManager.MachineGunAmmoCapacity);
@@ -408,7 +408,7 @@
             
 
             //check collision between player and health box
-            CollisionHandling:: CheckPlayerHealthBoxCollision(playerCamera.playerBody, healthBoxManager.healthBoxes, playerHealth, maxPlayerHealth);
+            CollisionHandling:: CheckPlayerHealthBoxCollision(playerCamera.playerBody, healthBoxManager, playerHealth, maxPlayerHealth);
             
                 
 
@@ -440,8 +440,8 @@
         DrawMaze();
         enemyManager.DrawEnemies();
         bulletManager.DrawBullets();
-        ammoBoxManager.DrawAmmoBoxes();
-        healthBoxManager.DrawHealthBoxes();
+        AmmoSystem::DrawAmmoBoxes(ammoBoxManager);
+        HealthSystem::DrawHealthBoxes(healthBoxManager);
         EndMode3D();
         
         DrawUI();
@@ -452,8 +452,8 @@
     void UnloadGame() {
         enemyManager.Reset();
         bulletManager.Reset();
-        ammoBoxManager.Reset();
-        healthBoxManager.Reset();
+        AmmoSystem::ResetAmmoBoxes(ammoBoxManager);
+        HealthSystem::ResetHealthBoxes(healthBoxManager);
         level = 1;
        
 

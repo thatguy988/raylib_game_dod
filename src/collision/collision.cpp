@@ -116,18 +116,18 @@ namespace CollisionHandling {
     
      bool CheckPlayerAmmoBoxCollision(
         const BoundingBox &playerBody, 
-        std::vector<AmmoSystem::AmmoBox>& ammoBoxes, 
+        AmmoSystem::AmmoBoxData& ammoBoxes, 
         int &pistolAmmo, int pistolAmmoCapacity, 
         int &shotgunAmmo, int shotgunAmmoCapacity, 
         int &machineGunAmmo, int machineGunAmmoCapacity
     ) {
-        for (auto& ammobox : ammoBoxes) {
-            if (ammobox.active) {
-                if (CheckCollisionBoxes(playerBody, ammobox.body)) {
+        for (size_t i = 0; i < ammoBoxes.positions.size(); ++i) {
+            if (ammoBoxes.activeStates[i]) {
+                if (CheckCollisionBoxes(playerBody, ammoBoxes.bodies[i])) {
                     bool maxAmmoReached = false;
 
                     // Handle ammo collection based on the ammo box type
-                    switch (ammobox.ammoType) {
+                    switch (ammoBoxes.ammoTypes[i]) {
                         case BulletSystem::WeaponType::PISTOL:
                             if (pistolAmmo < pistolAmmoCapacity) {
                                 pistolAmmo = std::min(pistolAmmo + 10, pistolAmmoCapacity);
@@ -154,7 +154,7 @@ namespace CollisionHandling {
                     }
 
                     if (!maxAmmoReached) {
-                        ammobox.Deactivate(); // Remove ammo box after collision
+                        ammoBoxes.activeStates[i] = false; // Remove ammo box after collision
                         return true;
                     }
                 }
@@ -163,19 +163,20 @@ namespace CollisionHandling {
 
         return false; // No collision detected
     }
-    
-    
-    bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody, std::vector<HealthSystem::HealthBox>& healthBoxes, int& playerHealth, int maxPlayerHealth) {
+
+    bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody, HealthSystem::HealthBoxData& healthBoxes, int& playerHealth, int maxPlayerHealth) {
         if (playerHealth != maxPlayerHealth) {
-            for (auto& healthBox : healthBoxes) {
-                if (healthBox.active && CheckCollisionBoxes(playerBody, healthBox.body)) {
-                    playerHealth = std::min(playerHealth + healthBox.healthPoints, maxPlayerHealth);
-                    healthBox.Deactivate(); // Deactivate the health box after collection
+            for (size_t i = 0; i < healthBoxes.positions.size(); ++i) {
+                if (healthBoxes.activeStates[i] && CheckCollisionBoxes(playerBody, healthBoxes.bodies[i])) {
+                    playerHealth = std::min(playerHealth + healthBoxes.healthPoints[i], maxPlayerHealth);
+                    healthBoxes.activeStates[i] = false; // Deactivate the health box after collection
                     return true;
                 }
             }
         }
         return false;
-    }   
+    }
+    
+     
     
 }
