@@ -4,23 +4,27 @@
 #include <memory>
 #include <vector>
 #include <queue>
+#include <functional>
+#include <variant>
 #include "raylib.h"
 #include "raymath.h"
-#include "../../common.h"
-#include "../bullet/bullet.h"
-
 #include <random>
 #include <iostream>
 #include <utility>
 #include <algorithm>  
 #include <cmath>
 
+
+
+#include "../../common.h"
+#include "../bullet/bullet.h"
+#include "imp.h"
+#include "Cyberdemon.h"
+
 namespace EnemySystem {
 
     enum class EnemyType {
         IMP,
-        DEMON,
-        BARON_OF_HELL,
         CYBER_DEMON,
         NONE
     };
@@ -31,42 +35,54 @@ namespace EnemySystem {
         CHASING
     };
 
-    class Enemy {
-    public:
-        Vector3 position;
-        BoundingBox body;
-        Vector3 targetPosition;
-        Vector3 rayPlayerPosition;
-        float movementSpeed;
-        bool active;
-        EnemyState state;
-        std::vector<Vector3> path;
-        Vector3 lastKnownPlayerPos;
-        float shootingTimer;
-        float bulletSpeed;
-        float shootingInterval;
-        float shootingHeightOffset;
-        EnemyType type;
-        int enemyHealth;
-        Ray ray;
-        RayCollision rayHitInfo;
-        Vector3 facingDirection;
 
-        Enemy();
-        virtual ~Enemy() = default;
-        virtual void Draw() const;
-        
-        static int PosToIndex(int x, int y, int m);
-        
-        static std::vector<Vector3> BFS(const Vector3& start, const Vector3& end, const int maze[MAX][MAX], int n, int m, float blockSize);
-        
-        static Vector3 GetRandomOpenPosition(const std::vector<Vector3>& openPositions);
+    struct EnemyData {
+        std::vector<Vector3> positions;
+        std::vector<BoundingBox> bodies;
+        std::vector<EnemyType> types;
+        std::vector<EnemyState> states;
+        std::vector<std::vector<Vector3>> paths;
+        std::vector<Vector3> lastKnownPlayerPos;
+        std::vector<float> shootingTimers;
+        std::vector<float> bulletSpeeds;
+        std::vector<float> shootingIntervals;
+        std::vector<float> shootingHeightOffsets;
+        std::vector<float> movementSpeeds;
+        std::vector<int> health;
+        std::vector<bool> activeStates;
+
+        int MAX_ENEMIES;
+
+        // Raycasting and direction attributes
+        std::vector<Ray> rays;
+        std::vector<RayCollision> rayHitInfos;
+        std::vector<Vector3> facingDirections;
+        std::vector<Vector3> targetPositions;
+        std::vector<Vector3> rayPlayerPositions;
 
         
 
-    protected:
-        // Protected methods and members
+        std::vector<std::function<void(size_t, const Vector3&, const std::vector<Vector3>&, int[MAX][MAX], int, int, float, bool, bool, BulletSystem::BulletData&, BulletSystem::SparseSet&)>> updateFunctions;
+        std::vector<std::function<void(size_t)>> drawFunctions;
+        std::vector<std::function<void(size_t)>> moveFunctions;
     };
+
+    
+
+    int PosToIndex(int x, int y, int m);   
+    std::vector<Vector3> BFS(const Vector3& start, const Vector3& end, const int maze[MAX][MAX], int n, int m, float blockSize); 
+    Vector3 GetRandomOpenPosition(const std::vector<Vector3>& openPositions);
+
+    void InitializeEnemies(EnemyData& data, const std::vector<Vector3>& openPositions, int currentLevel);
+    void InitializeEnemyData(EnemyData& data);
+    void AddEnemy(EnemyData& data, const Vector3& position, EnemyType type);
+    void UpdateEnemies(EnemyData& data, const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set, const BoundingBox &playerBody, const std::vector<BoundingBox>& wallBoundingBoxes);
+    void DrawEnemies(const EnemyData& data);
+    void ResetEnemies(EnemyData& data);
+
+    bool CheckPlayerSingleEnemyCollision(const BoundingBox &playerBody, const BoundingBox &enemyBody);
+    void SetRandomMaxEnemies(int currentLevel, EnemyData& data);
+
 
     
     

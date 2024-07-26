@@ -18,7 +18,7 @@
 
 
 namespace EnemySystem {
-    struct Enemy;
+    struct EnemyData;
     enum class EnemyType;
 }
 
@@ -38,7 +38,7 @@ namespace CollisionHandling {
     
     bool CheckBulletCollision(const Vector3 &bulletPosition, const std::vector<BoundingBox>& wallBoundingBoxes,  const BoundingBox& endpointBoundingBox, float bulletRadius);
 
-    bool CheckBulletEnemyCollision(BulletSystem::BulletData& data, BulletSystem::SparseSet& set, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies);
+    bool CheckBulletEnemyCollision(BulletSystem::BulletData& bulletdata, BulletSystem::SparseSet& set, EnemySystem::EnemyData& enemydata);
 
     bool CheckBulletPlayerCollision(BulletSystem::BulletData& data, BulletSystem::SparseSet& set, const BoundingBox& playerBody, int& playerHealth);
     
@@ -46,7 +46,7 @@ namespace CollisionHandling {
 
 
 
-    bool CheckPlayerEnemyCollision(const BoundingBox &playerBody, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies);
+    bool CheckPlayerEnemyCollision(const BoundingBox &playerBody, EnemySystem::EnemyData& data);
     
     bool CheckPlayerAmmoBoxCollision(const BoundingBox &playerBody, AmmoSystem::AmmoBoxData& ammoBoxes, BulletSystem::WeaponManager& weapons);
 

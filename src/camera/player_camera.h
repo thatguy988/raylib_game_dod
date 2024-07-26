@@ -14,7 +14,7 @@
 #include "../collision/collision.h"
 
 namespace EnemySystem {
-    struct Enemy;
+    struct EnemyData;
 }
 
 namespace GameScreen {
@@ -33,10 +33,10 @@ namespace GameScreen {
         PlayerCamera(float camSpeed, float blkSize, float height, float width);
         void InitializeCamera(std::pair<int, int> startCoords);
         
-        int UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies);
+        int UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::EnemyData& data);
 
 
-        float GetDistanceToClosestEnemy(const Vector3& position, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies);
+        float GetDistanceToClosestEnemy(const Vector3& position, EnemySystem::EnemyData& data);
         
     };
 

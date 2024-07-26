@@ -60,15 +60,22 @@ namespace BulletSystem {
 
     class SparseSet{
     public:
-        std::vector<size_t> sparse;
-        std::vector<size_t> dense;
-        size_t capacity;
-        size_t size;
+        
 
         SparseSet(size_t maxCapacity);
         void Add(size_t index);
         void Remove(size_t index);
         bool Contains(size_t index) const;
+        size_t GetSize() const;
+        size_t GetCapacity() const;
+        const std::vector<size_t>& GetDense() const;
+        void Clear();
+        
+    private:
+        std::vector<size_t> sparse;
+        std::vector<size_t> dense;
+        size_t capacity;
+        size_t size;
     };
 
     void InitializeBulletData(BulletData& data, size_t maxBullets);
@@ -77,7 +84,6 @@ namespace BulletSystem {
     void DrawBullets(const BulletData& data, const SparseSet& set);
     void ResetBulletData(BulletData& data, SparseSet& set);
     void HandleInactiveBullets(BulletData& data, SparseSet& set);
-    int FindInactiveBullet(const BulletData& data, const SparseSet& set);
     void Shoot(BulletData& data, SparseSet& set, WeaponManager& weaponManager, const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon, bool playerBullet);
     void EnemyShootBullet(BulletData& data, SparseSet& set, const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed, EnemySystem::EnemyType enemyType);
     void HandleWeaponInputAndShooting(BulletData& data, SparseSet& set, WeaponManager& weaponManager, const GameScreen::PlayerCamera& playerCamera, WeaponType& currentWeapon);

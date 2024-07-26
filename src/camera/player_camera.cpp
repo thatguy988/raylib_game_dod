@@ -32,7 +32,7 @@ namespace GameScreen {
 
 
 
-    int PlayerCamera::UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies){
+    int PlayerCamera::UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::EnemyData& data){
         
         Vector3 forward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
         Vector3 right = Vector3Normalize(Vector3CrossProduct(forward, camera.up));
@@ -53,11 +53,11 @@ namespace GameScreen {
 
         // Check for collision at the new position
         int collisionType = CollisionHandling::CheckCollision(potentialPlayerBody, wallBoundingBoxes, endpointBoundingBox);
-        bool playerEnemyCollision = CollisionHandling::CheckPlayerEnemyCollision(playerBody, enemies);
+        bool playerEnemyCollision = CollisionHandling::CheckPlayerEnemyCollision(playerBody, data);
        
         // Calculate distance to the closest enemy from current and potential positions
-        float distanceToEnemyFromCurrent = GetDistanceToClosestEnemy(camera.position, enemies);
-        float distanceToEnemyFromPotential = GetDistanceToClosestEnemy(potentialNewPosition, enemies);
+        float distanceToEnemyFromCurrent = GetDistanceToClosestEnemy(camera.position, data);
+        float distanceToEnemyFromPotential = GetDistanceToClosestEnemy(potentialNewPosition, data);
         
     
         // Collision resolution and position update
@@ -83,11 +83,11 @@ namespace GameScreen {
     
     
     
-    float PlayerCamera::GetDistanceToClosestEnemy(const Vector3& position, std::vector<std::unique_ptr<EnemySystem::Enemy>>& enemies) {
+    float PlayerCamera::GetDistanceToClosestEnemy(const Vector3& position, EnemySystem::EnemyData& data) {
         float minDistance = std::numeric_limits<float>::max();
-        for (const auto& enemy : enemies) {
-            if (enemy->active) {
-                float distance = Vector3Distance(position, enemy->position);
+        for (size_t i = 0; i < data.positions.size(); ++i) {
+            if (data.activeStates[i]) {
+                float distance = Vector3Distance(position, data.positions[i]);
                 if (distance < minDistance) {
                     minDistance = distance;
                 }

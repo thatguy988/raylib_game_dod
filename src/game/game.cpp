@@ -12,16 +12,11 @@
     #include "../collision/collision.h"
     #include "../camera/player_camera.h"
     #include "../entities/bullet/bullet.h"
-    #include "../entities/enemy/enemymanager.h"
+    #include "../entities/enemy/enemy.h"
     #include "../entities/ammobox/ammobox.h"
     #include "../entities/healthbox/healthbox.h"
     
     #define LIGHTRED        (Color){ 230, 41, 55, 128 }     
-
-
-
-
-   
 
     namespace GameScreen {
         
@@ -52,6 +47,7 @@
 
 
 
+
         float wallHeight = 3.0f; // Height of the walls
         float floorThickness = 0.1f; // Thickness of the floor
 
@@ -68,7 +64,7 @@
         BulletSystem::SparseSet sparseSet(MAX_BULLETS);
 
         BulletSystem::WeaponManager weaponsManager;
-        EnemySystem::EnemyManager enemyManager;
+        EnemySystem::EnemyData enemyManager;
         AmmoSystem::AmmoBoxData ammoBoxManager;
         HealthSystem::HealthBoxData healthBoxManager;
         
@@ -250,12 +246,11 @@
         
 
         void InitGame() {
-            enemyManager.Reset();
-
+            EnemySystem::ResetEnemies(enemyManager);
             BulletSystem::ResetBulletData(bulletManager, sparseSet);
             AmmoSystem::ResetAmmoBoxes(ammoBoxManager);
             HealthSystem::ResetHealthBoxes(healthBoxManager);
-            enemyManager.SetRandomMaxEnemies(level);
+            EnemySystem::SetRandomMaxEnemies(level, enemyManager);
             AmmoSystem::SetMaxAmmoBoxes(ammoBoxManager);
             HealthSystem::SetMaxHealthBoxes(healthBoxManager);
             
@@ -281,15 +276,14 @@
                 
                 playerCamera.InitializeCamera(startCoords);
                 openPositionsForItems = openPositions;
-                enemyManager.InitializeEnemies(openPositions,level);
+                EnemySystem::InitializeEnemyData(enemyManager);
+                EnemySystem::InitializeEnemies(enemyManager, openPositions,level);
                 AmmoSystem::InitializeAmmoBoxes(ammoBoxManager, openPositionsForItems);
                 HealthSystem::InitializeHealthBoxes(healthBoxManager, openPositionsForItems); 
                 BulletSystem::InitializeBulletData(bulletManager, MAX_BULLETS);
 
                 GenerateWallBoundingBoxes();
-                
-                enemyManager.SetWallBoundingBoxes(GameScreen::wallBoundingBoxes);
-                
+                                
                 float mazeWidth = m * playerCamera.blockSize;
                 float mazeHeight = n * playerCamera.blockSize;
                 InitializeOutOfBoundsBox(mazeWidth, mazeHeight, 10.0f); // 10 units buffer around the maze
@@ -299,16 +293,13 @@
                 auto startCoords = InitializeMaze();
                 playerCamera.InitializeCamera(startCoords);
                 openPositionsForItems = openPositions;
-                enemyManager.InitializeEnemies(openPositions, level);
+                EnemySystem::InitializeEnemyData(enemyManager);
+                EnemySystem::InitializeEnemies(enemyManager, openPositions, level);
                 AmmoSystem::InitializeAmmoBoxes(ammoBoxManager,openPositionsForItems);
                 HealthSystem::InitializeHealthBoxes(healthBoxManager, openPositionsForItems); 
                 
-
-
                 GenerateWallBoundingBoxes();
-                
-                enemyManager.SetWallBoundingBoxes(GameScreen::wallBoundingBoxes);
-                
+                                
                 float mazeWidth = m * playerCamera.blockSize;
                 float mazeHeight = n * playerCamera.blockSize;
                 InitializeOutOfBoundsBox(mazeWidth, mazeHeight, 10.0f); // 10 units buffer around the maze
@@ -320,13 +311,15 @@
         void UpdateGame() {
             
             
-            auto exitpoint = playerCamera.UpdateCamera(wallBoundingBoxes, endpointBoundingBox, enemyManager.enemies);
+            auto exitpoint = playerCamera.UpdateCamera(wallBoundingBoxes, endpointBoundingBox, enemyManager);
             // Check if level is 50 and if the enemy (Cyberdemon) is defeated
             bool canExitLevel = true;
             if (level == 50) {
                 // Assuming there's only one enemy and it's a Cyberdemon
-                if (!enemyManager.enemies.empty() && enemyManager.enemies[0]->active) {
+                if (enemyManager.activeStates[0]) {
                     canExitLevel = false; // Can't exit if the Cyberdemon is still active
+                }else{
+                    canExitLevel = true;
                 }
             }
 
@@ -345,7 +338,7 @@
 
 
             
-            CollisionHandling::CheckBulletEnemyCollision(bulletManager, sparseSet, enemyManager.enemies);
+            CollisionHandling::CheckBulletEnemyCollision(bulletManager, sparseSet, enemyManager);
 
 
             // Check for bullet-player collision
@@ -376,8 +369,8 @@
                     isRedFlashActive = false; // Deactivate the red flash
                 }
             }
-            
-            enemyManager.UpdateEnemies(playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager, sparseSet, playerCamera.playerBody);
+
+            EnemySystem::UpdateEnemies(enemyManager, playerCamera.camera.position, maze, n, m, GameScreen::playerCamera.blockSize, openPositions, bulletManager, sparseSet, playerCamera.playerBody, wallBoundingBoxes);
             
             
             
@@ -394,7 +387,7 @@
         
         
         DrawMaze();
-        enemyManager.DrawEnemies();
+        EnemySystem::DrawEnemies(enemyManager);
         BulletSystem::DrawBullets(bulletManager, sparseSet);
         AmmoSystem::DrawAmmoBoxes(ammoBoxManager);
         HealthSystem::DrawHealthBoxes(healthBoxManager);
@@ -406,7 +399,7 @@
     
 
     void UnloadGame() {
-        enemyManager.Reset();
+        EnemySystem::ResetEnemies(enemyManager);
         BulletSystem::ResetBulletData(bulletManager, sparseSet);
         AmmoSystem::ResetAmmoBoxes(ammoBoxManager);
         HealthSystem::ResetHealthBoxes(healthBoxManager);

@@ -2,26 +2,19 @@
 #define CYBERDEMON_H
 
 #include "enemy.h"
+#include "../bullet/bullet.h"
 
 namespace EnemySystem {
 
-    class Cyberdemon : public Enemy {
-    public:
-        Cyberdemon();
-        virtual ~Cyberdemon() = default;
-        void Draw() const override;
-        
-        void CalculatePathToRandomTarget(Enemy& enemy, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize);
-        void CalculatePathToPlayer(Enemy& enemy, const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize);
-        void MoveEnemyAlongPath(Enemy& enemy);
-        void HandleAttackState(Enemy& enemy, const Vector3& playerPosition, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set);
-        void UpdateEnemyState(Enemy& enemy, const Vector3& playerPosition,  const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set);
-        
+    struct EnemyData;
 
-    private:
-        
-    };
+    void CalculateCyberdemonPathToRandomTarget(size_t index, EnemyData& data, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize);
+    void CalculateCyberdemonPathToPlayer(size_t index, EnemyData& data, const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize);
+    void MoveCyberdemonAlongPath(size_t index, EnemyData& data);
+    void HandleCyberdemonAttackState(size_t index, EnemyData& data, const Vector3& playerPosition, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set);
+    void UpdateCyberdemonEnemyState(size_t index, EnemyData& data, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, bool playerEnemyCollision, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set);
+    void DrawCyberdemon(size_t index, const EnemyData& data);
 
 }
 
-#endif // IMP_H
+#endif // CYBERDEMON_H

@@ -38,6 +38,24 @@ namespace BulletSystem {
         return sparse[index] < size;
     }
     
+    size_t SparseSet::GetSize() const{
+        return size;
+    }
+
+    size_t SparseSet::GetCapacity() const{
+        return capacity;
+    }
+
+    const std::vector<size_t>& SparseSet::GetDense() const{ 
+        return dense;
+    }
+
+    void SparseSet::Clear() {
+        dense.clear();
+        std::fill(sparse.begin(), sparse.end(), capacity);
+        size = 0;
+    }
+    
     void InitializeBulletData(BulletData& data, size_t maxBullets) {
         data.positions.resize(maxBullets);
         data.directions.resize(maxBullets);
@@ -50,8 +68,8 @@ namespace BulletSystem {
     }
 
     void AddBullet(BulletData& data, SparseSet& set, const Vector3& position, const Vector3& direction, float speed, WeaponType weaponType, bool playerBullet, EnemySystem::EnemyType enemyType) {
-        if (set.size < set.capacity) {
-            size_t index = set.size;
+        if (set.GetSize() < set.GetCapacity()) {
+            size_t index = set.GetSize();
             data.positions[index] = position;
             data.directions[index] = direction;
             data.speeds[index] = speed;
@@ -65,8 +83,10 @@ namespace BulletSystem {
     }
 
     void HandleInactiveBullets(BulletData& data, SparseSet& set) {
-        for (size_t i = 0; i < set.size;) {
-            size_t index = set.dense[i];
+        const std::vector<size_t>& denseSet = set.GetDense();
+        for (size_t i = 0; i < set.GetSize();) {
+            size_t index = denseSet[i];
+            //size_t index = set.dense[i];
             if (!data.activeStates[index]) {
                 set.Remove(index);
             } else {
@@ -76,8 +96,9 @@ namespace BulletSystem {
     }
 
     void UpdateBullets(BulletData& data, SparseSet& set, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox) {
-        for (size_t i = 0; i < set.size; ++i) {
-            size_t index = set.dense[i];
+        const std::vector<size_t>& denseSet = set.GetDense();
+        for (size_t i = 0; i < set.GetSize(); ++i) {
+            size_t index = denseSet[i];
             if (data.activeStates[index]) {
                 data.positions[index] = Vector3Add(data.positions[index], Vector3Scale(data.directions[index], data.speeds[index]));
                 if (CollisionHandling::CheckBulletCollision(data.positions[index], wallBoundingBoxes, endpointBoundingBox, data.radii[index])) {
@@ -89,8 +110,9 @@ namespace BulletSystem {
     }
 
     void DrawBullets(const BulletData& data, const SparseSet& set) {
-        for (size_t i = 0; i < set.size; ++i) {
-            size_t index = set.dense[i];
+        const std::vector<size_t>& denseSet = set.GetDense();
+        for (size_t i = 0; i < set.GetSize(); ++i) {
+            size_t index = denseSet[i];
             if (data.activeStates[index]) {
                 DrawSphere(data.positions[index], data.radii[index], RED);
             }
@@ -106,19 +128,8 @@ namespace BulletSystem {
         data.radii.clear();
         data.weaponTypes.clear();
         data.enemyTypes.clear();
-        set.sparse.clear();
-        set.dense.clear();
-        InitializeBulletData(data, set.capacity);
-        set.size = 0;
-    }
-
-    int FindInactiveBullet(const BulletData& data, const SparseSet& set) {
-        for (size_t i = 0; i < set.capacity; ++i) {
-            if (!data.activeStates[i]) {
-                return i;
-            }
-        }
-        return -1;
+        set.Clear();
+        InitializeBulletData(data, set.GetCapacity());
     }
 
     void EnemyShootBullet(BulletData& data, SparseSet& set, const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed, EnemySystem::EnemyType enemyType) {
@@ -180,7 +191,8 @@ namespace BulletSystem {
 
         Vector3 bulletDirection = Vector3Normalize(Vector3Subtract(playerCamera.camera.target, playerCamera.camera.position));
 
-        float deltaTime = GetFrameTime(); // Get the time elapsed since the last frame
+        // Get the time elapsed since the last frame
+        float deltaTime = GetFrameTime(); 
 
         // Update timers for all weapons
         weaponManager.machineGunLastShotTime += deltaTime;
