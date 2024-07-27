@@ -39,11 +39,11 @@ namespace CollisionHandling {
     }
 
     
-    
+    //check one bullet
     bool CheckBulletCollision(const Vector3 &bulletPosition, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, float bulletRadius) {
         for (const auto& wallBox : wallBoundingBoxes) {
             if (CheckCollisionBoxSphere(wallBox, bulletPosition, bulletRadius)) {
-               // std::cout<<"BULLET AND WALL COLLISION" <<std::endl;
+                //std::cout<<"BULLET AND WALL COLLISION" <<std::endl;
                 return true; // Collision detected
             }
         }
@@ -55,18 +55,17 @@ namespace CollisionHandling {
         return false; // No collision detected
     }
 
-    
-    bool CheckBulletEnemyCollision(BulletSystem::BulletData& bulletdata, BulletSystem::SparseSet& set, EnemySystem::EnemyData& enemydata) {
+    void CheckBulletEnemyCollision(BulletSystem::BulletData& bulletdata, BulletSystem::SparseSet& set, EnemySystem::EnemyData& enemydata) {
         const std::vector<size_t>& denseSet = set.GetDense();
         for (size_t i = 0; i < set.GetSize(); ++i) {
-            size_t index = denseSet[i];
-            if (bulletdata.activeStates[index] && bulletdata.playerBullets[index]) {
-                for (size_t i = 0; i < enemydata.positions.size(); ++i) {
-                    if (enemydata.activeStates[i]) {
+            size_t bulletIndex = denseSet[i];
+            if (bulletdata.activeStates[bulletIndex] && bulletdata.playerBullets[bulletIndex]) {
+                for (size_t j = 0; j < enemydata.positions.size(); ++j) {
+                    if (enemydata.activeStates[j]) {
                         // Check if bullet position overlaps with enemy position
-                        if (CheckCollisionBoxSphere(enemydata.bodies[i], bulletdata.positions[index], bulletdata.radii[index])) {
+                        if (CheckCollisionBoxSphere(enemydata.bodies[j], bulletdata.positions[bulletIndex], bulletdata.radii[bulletIndex])) {
                             // Collision logic
-                            switch (bulletdata.weaponTypes[index]) {
+                            switch (bulletdata.weaponTypes[bulletIndex]) {
                                 case BulletSystem::WeaponType::PISTOL:
                                     std::cout << "HIT BY PISTOL" << std::endl;
                                     break;
@@ -79,22 +78,23 @@ namespace CollisionHandling {
                                 default:
                                     break;
                             }
-
-                            bulletdata.activeStates[index] = false; // Deactivate the bullet
-                            enemydata.activeStates[index]= false;    // Deactivate the enemy
-                            return true; // Collision detected
+                            bulletdata.activeStates[bulletIndex] = false; // Deactivate the bullet
+                            enemydata.activeStates[j] = false;    // Deactivate the enemy
+                            // Continue to the next bullet after handling the collision
+                            break;
                         }
                     }
                 }
             }
         }
-        return false; // No collision detected
     }
 
 
     
     bool CheckBulletPlayerCollision(BulletSystem::BulletData& data, BulletSystem::SparseSet& set, const BoundingBox& playerBody, int& playerHealth) {
         const std::vector<size_t>& denseSet = set.GetDense();
+        bool collisionDetected = false;
+
         for (size_t i = 0; i < set.GetSize(); ++i) {
             size_t index = denseSet[i];
             if (data.activeStates[index] && !data.playerBullets[index]) {  // Check only enemy bullets
@@ -102,20 +102,21 @@ namespace CollisionHandling {
                 if (CheckCollisionBoxSphere(playerBody, data.positions[index], data.radii[index])) {
                     switch (data.enemyTypes[index]) {
                         case EnemySystem::EnemyType::IMP:
-                            //std::cout << "IMP attack" << std::endl;
                             playerHealth -= 5;
                             break;
                         default:
                             break;
                     }
-                    
                     data.activeStates[index] = false; // Deactivate the bullet
-                    return true; // Collision with player detected
+                    collisionDetected = true; // Set the flag to true
                 }
             }
         }
-        return false; // No collision detected
+
+        return collisionDetected; // Return the flag
     }
+
+
 
 
     

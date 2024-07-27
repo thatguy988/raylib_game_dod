@@ -154,7 +154,7 @@ namespace BulletSystem {
                     std::mt19937 gen(rd());
                     std::uniform_real_distribution<float> dis(-weaponManager.spreadAngle, weaponManager.spreadAngle);
 
-                    for (int i = 0; i < -weaponManager.shotgunPellets; ++i) {
+                    for (int i = 0; i < weaponManager.shotgunPellets; ++i) {
                         // Randomly alter the direction within the spread angle
                         float angle = dis(gen); // Random angle in degrees
                         float rad = angle * DEG2RAD; // Convert to radians
@@ -163,9 +163,8 @@ namespace BulletSystem {
                         Matrix rotation = MatrixRotate(Vector3{0, 1, 0}, rad); // Assuming spread in horizontal plane
                         Vector3 spreadDir = Vector3Transform(direction, rotation);
 
-                        AddBullet(data, set, position, direction, speed, currentWeapon, playerBullet, EnemySystem::EnemyType::NONE);
+                        AddBullet(data, set, position, spreadDir, speed, currentWeapon, playerBullet, EnemySystem::EnemyType::NONE);
 
-                       
                     }
 
                     weaponManager.shotGunLastShotTime = currentTime;

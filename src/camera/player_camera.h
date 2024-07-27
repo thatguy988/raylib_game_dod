@@ -25,13 +25,12 @@ namespace GameScreen {
 
    
         float cameraSpeed;
-        float blockSize;
         float playerHeight;
         float playerWidth;
         
         
-        PlayerCamera(float camSpeed, float blkSize, float height, float width);
-        void InitializeCamera(std::pair<int, int> startCoords);
+        PlayerCamera(float camSpeed, float height, float width);
+        void InitializeCamera(std::pair<int, int> startCoords, float blockSize);
         
         int UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::EnemyData& data);
 

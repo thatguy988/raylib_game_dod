@@ -13,7 +13,7 @@ namespace EnemySystem {
 
 
     void SetRandomMaxEnemies(int currentLevel, EnemyData& data) {
-        if(currentLevel == 50){
+        if(currentLevel == 10){
             data.MAX_ENEMIES = 1;
             std::cout << "New MAX_ENEMIES set to: " << data.MAX_ENEMIES << std::endl;
             return;
@@ -34,19 +34,19 @@ namespace EnemySystem {
     }
 
     // BFS function to find the shortest path
-    std::vector<Vector3> BFS(const Vector3& start, const Vector3& end, const int maze[MAX][MAX], int n, int m, float blockSize) {
+    std::vector<Vector3> BFS(const Vector3& start, const Vector3& end, MazeGenerator::MazeData& mazeData) {
         std::queue<Vector3> queue;
         std::unordered_map<int, Vector3> cameFrom; // Map of positions and their predecessors
         std::vector<Vector3> path;
 
         // Convert start and end positions to grid indices
-        int startX = static_cast<int>(start.x / blockSize + roundingOffset);
-        int startY = static_cast<int>(start.z / blockSize + roundingOffset);
-        int endX = static_cast<int>(end.x / blockSize + roundingOffset);
-        int endY = static_cast<int>(end.z / blockSize + roundingOffset);
+        int startX = static_cast<int>(start.x / mazeData.blockSize + roundingOffset);
+        int startY = static_cast<int>(start.z / mazeData.blockSize + roundingOffset);
+        int endX = static_cast<int>(end.x / mazeData.blockSize + roundingOffset);
+        int endY = static_cast<int>(end.z / mazeData.blockSize + roundingOffset);
 
         queue.push(Vector3{static_cast<float>(startX), 0, static_cast<float>(startY)});
-        cameFrom[PosToIndex(startX, startY, m)] = Vector3{-1, -1, -1}; // Use -1 to indicate the start
+        cameFrom[PosToIndex(startX, startY, mazeData.m)] = Vector3{-1, -1, -1}; // Use -1 to indicate the start
 
         while (!queue.empty()) {
             Vector3 current = queue.front();
@@ -58,8 +58,8 @@ namespace EnemySystem {
             if (x == endX && y == endY) { // Reached the end
                 // Backtrack to get the path
                 while (!(current.x == -1 && current.z == -1)) {
-                    path.push_back(Vector3{current.x * blockSize, 0, current.z * blockSize});
-                    current = cameFrom[PosToIndex(static_cast<int>(current.x), static_cast<int>(current.z), m)];
+                    path.push_back(Vector3{current.x * mazeData.blockSize, 0, current.z * mazeData.blockSize});
+                    current = cameFrom[PosToIndex(static_cast<int>(current.x), static_cast<int>(current.z), mazeData.m)];
                 }
                 std::reverse(path.begin(), path.end());
                 return path;
@@ -76,9 +76,9 @@ namespace EnemySystem {
             for (auto& neighbor : neighbors) {
                 int nx = static_cast<int>(neighbor.x);
                 int ny = static_cast<int>(neighbor.z);
-                if (nx >= 0 && nx < m && ny >= 0 && ny < n && maze[ny][nx] == 0 && cameFrom.find(PosToIndex(nx, ny, m)) == cameFrom.end()) {
+                if (nx >= 0 && nx < mazeData.m && ny >= 0 && ny < mazeData.n && mazeData.maze[ny][nx] == 0 && cameFrom.find(PosToIndex(nx, ny, mazeData.m)) == cameFrom.end()) {
                     queue.push(neighbor);
-                    cameFrom[PosToIndex(nx, ny, m)] = current;
+                    cameFrom[PosToIndex(nx, ny, mazeData.m)] = current;
                 }
             }
         }
@@ -106,7 +106,7 @@ namespace EnemySystem {
 
 
     void InitializeEnemies(EnemyData& data, const std::vector<Vector3>& openPositions, int currentLevel) {
-        if (currentLevel == 50) {
+        if (currentLevel == 10) {
             // For level 50, spawn a single Cyberdemon
             if (!openPositions.empty()) {
                 auto cyberdemonPosition = openPositions.front(); // Use the first open position for simplicity
@@ -198,8 +198,8 @@ namespace EnemySystem {
 
                 switch (type) {
                     case EnemyType::IMP:
-                        data.updateFunctions[i] = [i, &data](size_t index, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, bool playerEnemyCollision, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
-                            UpdateImpEnemyState(index, data, playerPosition, openPositions, maze, n, m, blockSize, rayHitsPlayer, playerEnemyCollision, bulletManager, set);
+                        data.updateFunctions[i] = [i, &data](size_t index, const Vector3& playerPosition, MazeGenerator::MazeData& mazeData, bool rayHitsPlayer, bool playerEnemyCollision, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
+                            UpdateImpEnemyState(index, data, playerPosition, mazeData, rayHitsPlayer, playerEnemyCollision, bulletManager, set);
                         };
                             
                         data.drawFunctions[i] = [i, &data](size_t index) { 
@@ -215,8 +215,8 @@ namespace EnemySystem {
                         data.shootingIntervals[i] = 1.0f;
                         break;
                     case EnemyType::CYBER_DEMON:
-                        data.updateFunctions[i] = [i, &data](size_t index, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, bool playerEnemyCollision, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
-                            UpdateCyberdemonEnemyState(index, data, playerPosition, openPositions, maze, n, m, blockSize, rayHitsPlayer, playerEnemyCollision, bulletManager, set);
+                        data.updateFunctions[i] = [i, &data](size_t index, const Vector3& playerPosition, MazeGenerator::MazeData& mazeData, bool rayHitsPlayer, bool playerEnemyCollision, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
+                            UpdateCyberdemonEnemyState(index, data, playerPosition, mazeData, rayHitsPlayer, playerEnemyCollision, bulletManager, set);
                         };
 
                         data.drawFunctions[i] = [i, &data](size_t index) { 
@@ -249,7 +249,7 @@ namespace EnemySystem {
             return false; // No collision detected
         }
 
-    void UpdateEnemies(EnemyData& data, const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set, const BoundingBox &playerBody, const std::vector<BoundingBox>& wallBoundingBoxes) {
+    void UpdateEnemies(EnemyData& data, const Vector3& playerPosition, MazeGenerator::MazeData& mazeData, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set, const BoundingBox &playerBody) {
         for (size_t i = 0; i < data.positions.size(); ++i) {
             if (!data.activeStates[i]) continue;
 
@@ -261,7 +261,7 @@ namespace EnemySystem {
             bool rayHitsPlayer = false;
             bool isObstructed = false;
 
-            for (const auto& box : wallBoundingBoxes) {
+            for (const auto& box : mazeData.wallBoundingBoxes) {
                 RayCollision collision = GetRayCollisionBox(data.rays[i], box);
                 if (collision.hit) {
                     if (collision.distance < Vector3Distance(data.rays[i].position, playerPosition)) {
@@ -277,7 +277,7 @@ namespace EnemySystem {
             bool playerEnemyCollision = CheckPlayerSingleEnemyCollision(playerBody, data.bodies[i]);
 
             if (data.updateFunctions[i]) {
-                data.updateFunctions[i](i, playerPosition, openPositions, maze, n, m, blockSize, rayHitsPlayer, playerEnemyCollision, bulletManager, set);
+                data.updateFunctions[i](i, playerPosition, mazeData, rayHitsPlayer, playerEnemyCollision, bulletManager, set);
             }
 
             // Additional logic for moving the enemy along the path or handling player collision can be added here
@@ -301,6 +301,36 @@ namespace EnemySystem {
     void ResetEnemies(EnemyData& data) {
         std::fill(data.activeStates.begin(), data.activeStates.end(), false);
     }
+
+
+    void CleanUpInactiveEnemies(EnemyData& data) {
+        for (size_t i = 0; i < data.positions.size(); ++i) {
+            if (!data.activeStates[i]) {
+                // Remove or reset enemy data
+                data.positions[i] = {0, 0, 0};
+                data.bodies[i] = {{0, 0, 0}, {0, 0, 0}};
+                data.types[i] = EnemyType::NONE;
+                data.states[i] = EnemyState::IDLE;
+                data.paths[i].clear();
+                data.lastKnownPlayerPos[i] = {0, 0, 0};
+                data.shootingTimers[i] = 0.0f;
+                data.bulletSpeeds[i] = 0.0f;
+                data.shootingIntervals[i] = 0.0f;
+                data.shootingHeightOffsets[i] = 0.0f;
+                data.movementSpeeds[i] = 0.0f;
+                data.health[i] = 0;
+                data.rays[i] = {0};
+                data.rayHitInfos[i] = {0};
+                data.facingDirections[i] = {0, 0, 0};
+                data.targetPositions[i] = {0, 0, 0};
+                data.rayPlayerPositions[i] = {0, 0, 0};
+                data.updateFunctions[i] = nullptr;
+                data.drawFunctions[i] = nullptr;
+                data.moveFunctions[i] = nullptr;
+            }
+        }
+    }
+
 
 
     

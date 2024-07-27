@@ -5,15 +5,15 @@
 namespace GameScreen {
     
     
-    GameScreen::PlayerCamera::PlayerCamera(float camSpeed, float blkSize, float height, float width) 
-    : cameraSpeed(camSpeed), blockSize(blkSize), playerHeight(height), playerWidth(width) {
+    GameScreen::PlayerCamera::PlayerCamera(float camSpeed, float height, float width) 
+    : cameraSpeed(camSpeed), playerHeight(height), playerWidth(width) {
         
         camera = {0}; // Initialize camera
         playerBody = {0}; // Initialize the bounding box representing the player's body
     }
 
  
-    void PlayerCamera::InitializeCamera(std::pair<int, int> startCoords) {
+    void PlayerCamera::InitializeCamera(std::pair<int, int> startCoords, float blockSize) {
         float scaledStartX = static_cast<float>(startCoords.second) * blockSize;
         float scaledStartZ = static_cast<float>(startCoords.first) * blockSize;
         float cameraHeight = 1.0f;

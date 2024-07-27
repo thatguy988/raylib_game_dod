@@ -2,18 +2,18 @@
 
 namespace EnemySystem {
 
-    void CalculateImpPathToRandomTarget(size_t index, EnemyData& data, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize) {
+    void CalculateImpPathToRandomTarget(size_t index, EnemyData& data, MazeGenerator::MazeData& mazeData) {
         if (data.paths[index].empty()) {
-            Vector3 randomTarget = GetRandomOpenPosition(openPositions);
-            data.paths[index] = BFS(data.positions[index], randomTarget, maze, n, m, blockSize);
+            Vector3 randomTarget = GetRandomOpenPosition(mazeData.openPositions);
+            data.paths[index] = BFS(data.positions[index], randomTarget, mazeData);
         }
     }
     
     
     
-    void CalculateImpPathToPlayer(size_t index, EnemyData& data, const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize) {
+    void CalculateImpPathToPlayer(size_t index, EnemyData& data, const Vector3& playerPosition, MazeGenerator::MazeData& mazeData) {
             data.lastKnownPlayerPos[index] = playerPosition;
-            data.paths[index] = BFS(data.positions[index], playerPosition, maze, n, m, blockSize);
+            data.paths[index] = BFS(data.positions[index], playerPosition, mazeData);
             if (!data.paths[index].empty()) {
                 data.paths[index].pop_back(); // Remove the last step (player's position) from the path
             }
@@ -50,15 +50,15 @@ namespace EnemySystem {
     }
     
     
-    void UpdateImpEnemyState(size_t index, EnemyData& data, const Vector3& playerPosition, const std::vector<Vector3>& openPositions, int maze[MAX][MAX], int n, int m, float blockSize, bool rayHitsPlayer, bool playerEnemyCollision, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
+    void UpdateImpEnemyState(size_t index, EnemyData& data, const Vector3& playerPosition, MazeGenerator::MazeData& mazeData, bool rayHitsPlayer, bool playerEnemyCollision, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set) {
 
         switch (data.states[index]) {
             case EnemyState::IDLE:
                 //std::cout<<"IN idle"<<std::endl;
-                CalculateImpPathToRandomTarget(index, data, openPositions, maze, n, m, blockSize);
+                CalculateImpPathToRandomTarget(index, data, mazeData);
                 if (rayHitsPlayer) {
                     data.paths[index].clear();
-                    CalculateImpPathToPlayer(index, data, playerPosition, maze, n, m, blockSize);
+                    CalculateImpPathToPlayer(index, data, playerPosition, mazeData);
                     data.states[index] = EnemyState::ATTACKING;
                 }
                 break;
@@ -67,10 +67,10 @@ namespace EnemySystem {
                 //std::cout<<"IN attack"<<std::endl;
                 if (!rayHitsPlayer) {
                     data.paths[index].clear();
-                    CalculateImpPathToPlayer(index, data, data.lastKnownPlayerPos[index], maze, n, m, blockSize);
+                    CalculateImpPathToPlayer(index, data, data.lastKnownPlayerPos[index], mazeData);
                     data.states[index] = EnemyState::CHASING; 
                 } else if (data.paths[index].empty()) {
-                    CalculateImpPathToPlayer(index, data, playerPosition, maze, n, m, blockSize);
+                    CalculateImpPathToPlayer(index, data, playerPosition, mazeData);
                 }
                 HandleImpAttackState(index, data, playerPosition, bulletManager, set);
 

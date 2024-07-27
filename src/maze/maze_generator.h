@@ -1,8 +1,13 @@
 #ifndef MAZE_GENERATOR_H
 #define MAZE_GENERATOR_H
 
+#include <iostream>
 #include <utility>
 #include <vector>
+#include "raylib.h"
+#include "raymath.h"
+
+
 
 #include "../common.h"
 
@@ -15,9 +20,37 @@ namespace MazeGenerator {
         Point(int _x, int _y) : x(_x), y(_y) {}
     };
 
-    std::pair<std::pair<int, int>, std::pair<int, int>> GenerateMaze(int n, int m, int pruningProbability, int maze[MAX][MAX]);
-    int FindShortestPath(int startX, int startY, int endX, int endY, int n, int m, int maze[MAX][MAX], int dist[MAX][MAX]);
-    
+    struct MazeData
+        {
+            int n;
+            int m;
+            int maze[MAX][MAX];
+            float blockSize;
+            std::vector<Vector3> openPositions; // Vector to store open positions
+            std::vector<Vector3> openPositionsForItems;
+            std::pair<int, int> endCoords;
+            std::pair<int, int> startCoords;
+            float wallHeight;
+            float floorThickness;
+            std::vector<BoundingBox> wallBoundingBoxes;
+            BoundingBox endpointBoundingBox;
+            BoundingBox outOfBoundsBox;
+
+            float mazeWidth;
+            float mazeHeight;
+        };
+
+    std::pair<std::pair<int, int>, std::pair<int, int>> GenerateMaze(MazeData& mazeData, int pruningProbability);
+    std::pair<int, int> InitializeMaze(MazeData& mazeData);
+    void UpdateMazeSize(MazeData& mazeData, int level);
+    void DrawMaze(const MazeData& mazeData);
+
+    void InitializeOutOfBoundsBox(MazeData& mazeData, float buffer);
+    void GenerateWallBoundingBoxes(MazeData& mazeData);
+    std::pair<std::pair<int, int>, std::pair<int, int>> ConvertPredefinedLevelToMaze(const std::vector<std::vector<int>>& predefinedLevel, MazeData& mazeData);
+
+
+
 
 
 } // namespace MazeGenerator

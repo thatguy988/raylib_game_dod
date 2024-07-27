@@ -18,6 +18,7 @@
 
 #include "../../common.h"
 #include "../bullet/bullet.h"
+#include "../../maze/maze_generator.h"
 #include "imp.h"
 #include "Cyberdemon.h"
 
@@ -62,7 +63,7 @@ namespace EnemySystem {
 
         
 
-        std::vector<std::function<void(size_t, const Vector3&, const std::vector<Vector3>&, int[MAX][MAX], int, int, float, bool, bool, BulletSystem::BulletData&, BulletSystem::SparseSet&)>> updateFunctions;
+        std::vector<std::function<void(size_t, const Vector3&, MazeGenerator::MazeData&, bool, bool, BulletSystem::BulletData&, BulletSystem::SparseSet&)>> updateFunctions;
         std::vector<std::function<void(size_t)>> drawFunctions;
         std::vector<std::function<void(size_t)>> moveFunctions;
     };
@@ -70,18 +71,21 @@ namespace EnemySystem {
     
 
     int PosToIndex(int x, int y, int m);   
-    std::vector<Vector3> BFS(const Vector3& start, const Vector3& end, const int maze[MAX][MAX], int n, int m, float blockSize); 
+    std::vector<Vector3> BFS(const Vector3& start, const Vector3& end, MazeGenerator::MazeData& mazeData); 
     Vector3 GetRandomOpenPosition(const std::vector<Vector3>& openPositions);
 
     void InitializeEnemies(EnemyData& data, const std::vector<Vector3>& openPositions, int currentLevel);
     void InitializeEnemyData(EnemyData& data);
     void AddEnemy(EnemyData& data, const Vector3& position, EnemyType type);
-    void UpdateEnemies(EnemyData& data, const Vector3& playerPosition, int maze[MAX][MAX], int n, int m, float blockSize, const std::vector<Vector3>& openPositions, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set, const BoundingBox &playerBody, const std::vector<BoundingBox>& wallBoundingBoxes);
+    void UpdateEnemies(EnemyData& data, const Vector3& playerPosition, MazeGenerator::MazeData& mazeData, BulletSystem::BulletData& bulletManager, BulletSystem::SparseSet& set, const BoundingBox &playerBody);
     void DrawEnemies(const EnemyData& data);
     void ResetEnemies(EnemyData& data);
 
     bool CheckPlayerSingleEnemyCollision(const BoundingBox &playerBody, const BoundingBox &enemyBody);
     void SetRandomMaxEnemies(int currentLevel, EnemyData& data);
+
+    void CleanUpInactiveEnemies(EnemyData& data);
+
 
 
     

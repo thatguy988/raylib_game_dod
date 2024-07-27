@@ -23,7 +23,7 @@ namespace PredefinedLevels {
         static const std::vector<std::vector<int>> emptyLevel; // Static empty level
 
         switch (levelNumber) {
-            case 50:
+            case 10:
                 return level50;
             // Add more cases for other predefined levels
             default:
