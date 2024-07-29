@@ -156,6 +156,9 @@ namespace MazeGenerator {
                     }
                 }
             }
+
+            mazeData.mazeWidth = mazeData.m * mazeData.blockSize;
+            mazeData.mazeHeight = mazeData.n * mazeData.blockSize;
             return startEndCoords.first;
         }
     
@@ -183,10 +186,6 @@ namespace MazeGenerator {
 
         mazeData.n = std::clamp(calculatedSizeN + sizeChangeN, minSize, maxSize);
         mazeData.m = std::clamp(calculatedSizeM + sizeChangeM, minSize, maxSize);
-
-        // Update maze dimensions
-        mazeData.mazeWidth = mazeData.m * mazeData.blockSize;
-        mazeData.mazeHeight = mazeData.n * mazeData.blockSize;
 
         std::cout << "New maze size: " << mazeData.n << "x" << mazeData.m << std::endl;
         std::cout << "Level " << level << std::endl;

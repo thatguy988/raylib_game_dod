@@ -29,7 +29,7 @@ namespace CollisionHandling {
     void CheckBulletOutOfBounds(BulletSystem::BulletData& data, BulletSystem::SparseSet& set, const BoundingBox& boundary) {
         const std::vector<size_t>& denseSet = set.GetDense();
         for (size_t i = 0; i < set.GetSize(); ++i) {
-            size_t index = denseSet[i];
+            size_t index = denseSet[i]; // get bullet in index
             if (data.activeStates[index] && !CheckCollisionBoxSphere(boundary, data.positions[index], data.radii[index])) {
                 std::cout << "bullet went out of bounds" << std::endl;
                 // Bullet is out of bounds, deactivate it
@@ -67,6 +67,7 @@ namespace CollisionHandling {
                             // Collision logic
                             switch (bulletdata.weaponTypes[bulletIndex]) {
                                 case BulletSystem::WeaponType::PISTOL:
+                                    // TODO: modify enemy health here
                                     std::cout << "HIT BY PISTOL" << std::endl;
                                     break;
                                 case BulletSystem::WeaponType::SHOTGUN:
@@ -78,6 +79,7 @@ namespace CollisionHandling {
                                 default:
                                     break;
                             }
+                            // TODO: if enemy health == 0 set enemy state to false
                             bulletdata.activeStates[bulletIndex] = false; // Deactivate the bullet
                             enemydata.activeStates[j] = false;    // Deactivate the enemy
                             // Continue to the next bullet after handling the collision
@@ -91,9 +93,9 @@ namespace CollisionHandling {
 
 
     
-    bool CheckBulletPlayerCollision(BulletSystem::BulletData& data, BulletSystem::SparseSet& set, const BoundingBox& playerBody, int& playerHealth) {
+    std::pair<bool, int> CheckBulletPlayerCollision(BulletSystem::BulletData& data, BulletSystem::SparseSet& set, const BoundingBox& playerBody) {
         const std::vector<size_t>& denseSet = set.GetDense();
-        bool collisionDetected = false;
+        std::pair<bool, int> results = {false, 0};
 
         for (size_t i = 0; i < set.GetSize(); ++i) {
             size_t index = denseSet[i];
@@ -102,18 +104,18 @@ namespace CollisionHandling {
                 if (CheckCollisionBoxSphere(playerBody, data.positions[index], data.radii[index])) {
                     switch (data.enemyTypes[index]) {
                         case EnemySystem::EnemyType::IMP:
-                            playerHealth -= 5;
+                            results.second = 5;
                             break;
                         default:
                             break;
                     }
                     data.activeStates[index] = false; // Deactivate the bullet
-                    collisionDetected = true; // Set the flag to true
+                    results.first = true; // Set the flag to true
                 }
             }
         }
 
-        return collisionDetected; // Return the flag
+        return results; // Return results
     }
 
 
@@ -133,7 +135,8 @@ namespace CollisionHandling {
     }
     
     
-     bool CheckPlayerAmmoBoxCollision(const BoundingBox &playerBody, AmmoSystem::AmmoBoxData& ammoBoxes, BulletSystem::WeaponManager& weapons) {
+     CollisionResults CheckPlayerAmmoBoxCollision(const BoundingBox &playerBody, AmmoSystem::AmmoBoxData& ammoBoxes, BulletSystem::WeaponManager& weapons) {
+        CollisionResults results = {false, 0, BulletSystem::WeaponType::NONE};
         for (size_t i = 0; i < ammoBoxes.positions.size(); ++i) {
             if (ammoBoxes.activeStates[i]) {
                 if (CheckCollisionBoxes(playerBody, ammoBoxes.bodies[i])) {
@@ -143,21 +146,27 @@ namespace CollisionHandling {
                     switch (ammoBoxes.ammoTypes[i]) {
                         case BulletSystem::WeaponType::PISTOL:
                             if (weapons.PistolAmmo < weapons.PistolAmmoCapacity) {
-                                weapons.PistolAmmo = std::min(weapons.PistolAmmo + 10, weapons.PistolAmmoCapacity);
+                                results.amount = std::min(10, weapons.PistolAmmoCapacity - weapons.PistolAmmo);
+                                weapons.PistolAmmo += results.amount;
+                                results.ammoType = BulletSystem::WeaponType::PISTOL;
                             } else {
                                 maxAmmoReached = true;
                             }
                             break;
                         case BulletSystem::WeaponType::SHOTGUN:
                             if (weapons.ShotgunAmmo < weapons.ShotgunAmmoCapacity) {
-                                weapons.ShotgunAmmo = std::min(weapons.ShotgunAmmo + 4, weapons.ShotgunAmmoCapacity);
+                                results.amount = std::min(4, weapons.ShotgunAmmoCapacity - weapons.ShotgunAmmo);
+                                weapons.ShotgunAmmo += results.amount;
+                                results.ammoType = BulletSystem::WeaponType::SHOTGUN;
                             } else {
                                 maxAmmoReached = true;
                             }
                             break;
                         case BulletSystem::WeaponType::MACHINE_GUN:
                             if (weapons.MachineGunAmmo < weapons.MachineGunAmmoCapacity) {
-                                weapons.MachineGunAmmo = std::min(weapons.MachineGunAmmo + 25, weapons.MachineGunAmmoCapacity);
+                                results.amount = std::min(25, weapons.MachineGunAmmoCapacity - weapons.MachineGunAmmo);
+                                weapons.MachineGunAmmo += results.amount;
+                                results.ammoType = BulletSystem::WeaponType::MACHINE_GUN;
                             } else {
                                 maxAmmoReached = true;
                             }
@@ -168,26 +177,29 @@ namespace CollisionHandling {
 
                     if (!maxAmmoReached) {
                         ammoBoxes.activeStates[i] = false; // Remove ammo box after collision
-                        return true;
+                        results.collided = true;
                     }
                 }
             }
         }
 
-        return false; // No collision detected
+        return results;
     }
 
-    bool CheckPlayerHealthBoxCollision(const BoundingBox &playerBody, HealthSystem::HealthBoxData& healthBoxes, int& playerHealth, int maxPlayerHealth) {
+    CollisionResults CheckPlayerHealthBoxCollision(const BoundingBox &playerBody, HealthSystem::HealthBoxData& healthBoxes, int& playerHealth, int maxPlayerHealth) {
+        CollisionResults results = {false, 0, BulletSystem::WeaponType::NONE};
         if (playerHealth != maxPlayerHealth) {
             for (size_t i = 0; i < healthBoxes.positions.size(); ++i) {
                 if (healthBoxes.activeStates[i] && CheckCollisionBoxes(playerBody, healthBoxes.bodies[i])) {
+                    results.amount = std::min(healthBoxes.healthPoints[i], maxPlayerHealth - playerHealth);
                     playerHealth = std::min(playerHealth + healthBoxes.healthPoints[i], maxPlayerHealth);
-                    healthBoxes.activeStates[i] = false; // Deactivate the health box after collection
-                    return true;
+                    results.collided = true;
+                    healthBoxes.activeStates[i] = false;
+                    break;
                 }
             }
         }
-        return false;
+        return results;
     }
     
      

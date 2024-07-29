@@ -4,10 +4,8 @@
 #include <iostream>
 #include <vector>
 #include "raylib.h"
-
 #include "../../camera/player_camera.h"
 #include "../../common.h"
-
 
 namespace GameScreen {
     struct PlayerCamera; // Forward declaration
@@ -17,9 +15,8 @@ namespace EnemySystem {
     enum class EnemyType; // Forward declaration
 }
 
-
 namespace BulletSystem {
-    
+
     enum class WeaponType {
         PISTOL,
         SHOTGUN,
@@ -58,10 +55,8 @@ namespace BulletSystem {
         float spreadAngle = 10.0f; // Spread angle in degrees
     };
 
-    class SparseSet{
+    class SparseSet {
     public:
-        
-
         SparseSet(size_t maxCapacity);
         void Add(size_t index);
         void Remove(size_t index);
@@ -87,8 +82,6 @@ namespace BulletSystem {
     void Shoot(BulletData& data, SparseSet& set, WeaponManager& weaponManager, const Vector3& position, const Vector3& direction, float speed, WeaponType currentWeapon, bool playerBullet);
     void EnemyShootBullet(BulletData& data, SparseSet& set, const Vector3& enemyPosition, const Vector3& shootingDirection, float bulletSpeed, EnemySystem::EnemyType enemyType);
     void HandleWeaponInputAndShooting(BulletData& data, SparseSet& set, WeaponManager& weaponManager, const GameScreen::PlayerCamera& playerCamera, WeaponType& currentWeapon);
-
-
 }
 
 #endif // BULLET_H

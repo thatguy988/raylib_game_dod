@@ -41,6 +41,8 @@
         HealthSystem::HealthBoxData healthBoxManager;
 
         MazeGenerator::MazeData MazeData;
+
+        Message pickupMessage;
         
         
         
@@ -76,6 +78,11 @@
             char healthText[50];
             sprintf(healthText, "Health: %d/%d", playerHealth, maxPlayerHealth);
             DrawText(healthText, 20, 100, 20, WHITE);
+
+            // Display the pickup message if the timer is active
+            if (pickupMessage.displayTimer > 0) {
+                DrawText(pickupMessage.text.c_str(), 20, 130, 20, pickupMessage.color);
+            }
         }
         
         
@@ -88,7 +95,8 @@
             EnemySystem::SetRandomMaxEnemies(level, enemyManager);
             AmmoSystem::SetMaxAmmoBoxes(ammoBoxManager);
             HealthSystem::SetMaxHealthBoxes(healthBoxManager);
-            
+
+            pickupMessage = Message(); // reset message
             
             
             
@@ -165,7 +173,7 @@
 
             BulletSystem::UpdateBullets(bulletManager, sparseSet, MazeData.wallBoundingBoxes, MazeData.endpointBoundingBox);
             
-            //CollisionHandling::CheckBulletOutOfBounds(bulletManager, sparseSet, MazeData.outOfBoundsBox);
+            CollisionHandling::CheckBulletOutOfBounds(bulletManager, sparseSet, MazeData.outOfBoundsBox);
 
 
             
@@ -175,22 +183,37 @@
 
 
             // Check for bullet-player collision
-            if (CollisionHandling::CheckBulletPlayerCollision(bulletManager, sparseSet, playerCamera.playerBody, playerHealth)) {
+            auto bulletplayerinfo = CollisionHandling::CheckBulletPlayerCollision(bulletManager, sparseSet, playerCamera.playerBody, playerHealth);
+            if(bulletplayerinfo.first){
+                playerHealth -= bulletplayerinfo.second; //update player health
                 isRedFlashActive = true; // Activate the red flash
                 redFlashTimer = redFlashDuration; // Reset the timer
-                
             }
+            
+
+            
             
                 
 
             
             // check collision between player and ammo box
-            CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.playerBody, ammoBoxManager, weaponsManager);
+            auto ammoboxcollisioninfo = CollisionHandling::CheckPlayerAmmoBoxCollision(playerCamera.playerBody, ammoBoxManager, weaponsManager);
+            if (ammoboxcollisioninfo.collided){
+                pickupMessage.text = "Picked up " + std::to_string(ammoboxcollisioninfo.amount) + " " +
+                                 (ammoboxcollisioninfo.ammoType == BulletSystem::WeaponType::PISTOL ? "pistol" :
+                                  ammoboxcollisioninfo.ammoType == BulletSystem::WeaponType::SHOTGUN ? "shotgun" : "machine gun") + " ammo";
+                pickupMessage.displayTimer = pickupMessage.duration;
+            }
             
             
 
             //check collision between player and health box
-            CollisionHandling:: CheckPlayerHealthBoxCollision(playerCamera.playerBody, healthBoxManager, playerHealth, maxPlayerHealth);
+            auto healthboxcollisioninfo = CollisionHandling:: CheckPlayerHealthBoxCollision(playerCamera.playerBody, healthBoxManager, playerHealth, maxPlayerHealth);
+            if (healthboxcollisioninfo.collided){
+                pickupMessage.text = "Picked up " + std::to_string(healthboxcollisioninfo.amount) + " HP";
+                pickupMessage.displayTimer = pickupMessage.duration;
+            }
+                
             
                 
 
@@ -199,8 +222,13 @@
             if (isRedFlashActive) {
                 redFlashTimer -= GetFrameTime();
                 if (redFlashTimer <= 0) {
-                    isRedFlashActive = false; // Deactivate the red flash
+                    isRedFlashActive = false;
                 }
+            }
+
+            // Update the pickup message timer
+            if (pickupMessage.displayTimer > 0) {
+                pickupMessage.displayTimer -= GetFrameTime();
             }
 
             EnemySystem::UpdateEnemies(enemyManager, playerCamera.camera.position, MazeData, bulletManager, sparseSet, playerCamera.playerBody);

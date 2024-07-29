@@ -1,6 +1,18 @@
 // common.h
 #pragma once
 
+#include <string>
+#include "raylib.h" 
+
+struct Message {
+    std::string text;
+    float displayTimer;
+    float duration;
+    Color color;
+
+    Message(const std::string& text = "", float duration = 3.0f, Color color = WHITE)
+        : text(text), displayTimer(duration), duration(duration), color(color) {}
+};
 
 
 enum GameState {
