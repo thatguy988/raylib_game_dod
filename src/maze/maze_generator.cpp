@@ -238,7 +238,7 @@ namespace MazeGenerator {
                     BoundingBox box = {Vector3Subtract(wallPosition, halfSize), 
                                        Vector3Add(wallPosition, halfSize)};
 
-                    // Distinguish between regular walls and the endpoint
+                    // 1 is wall and 2 is endpoint
                     if (mazeData.maze[i][j] == 1) {
                         mazeData.wallBoundingBoxes.push_back(box);
                     } else if (mazeData.maze[i][j] == 2) {
@@ -250,16 +250,18 @@ namespace MazeGenerator {
     }
 
     std::pair<std::pair<int, int>, std::pair<int, int>> ConvertPredefinedLevelToMaze(const std::vector<std::vector<int>>& predefinedLevel, MazeData& mazeData) {
-        mazeData.n = predefinedLevel.size();    // Number of rows
-        mazeData.m = predefinedLevel[0].size(); // Number of columns
+        mazeData.n = predefinedLevel.size();    
+        mazeData.m = predefinedLevel[0].size(); 
+        mazeData.mazeWidth = mazeData.m * mazeData.blockSize; //collision bounds
+        mazeData.mazeHeight = mazeData.n * mazeData.blockSize;
 
         for (int i = 0; i < mazeData.n; ++i) {
             for (int j = 0; j < mazeData.m; ++j) {
                 mazeData.maze[i][j] = predefinedLevel[i][j];
-                if (mazeData.maze[i][j] == 3) { // Assuming 3 represents the start point
+                if (mazeData.maze[i][j] == 3) { // 3 represents the start point
                     mazeData.startCoords = {i, j};
                 }
-                if (mazeData.maze[i][j] == 2) { // Assuming 2 represents the end point
+                if (mazeData.maze[i][j] == 2) { // 2 represents the end point
                     mazeData.endCoords = {i, j};
                 }
             }

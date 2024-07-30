@@ -22,8 +22,8 @@ namespace MazeGenerator {
 
     struct MazeData
         {
-            int n;
-            int m;
+            int n;//number of rows
+            int m;//number of columns
             int maze[MAX][MAX];
             float blockSize;
             std::vector<Vector3> openPositions; // Vector to store open positions

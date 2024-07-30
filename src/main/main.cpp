@@ -20,6 +20,9 @@ int main(void) {
     */
     GameState currentGameState = MAIN_MENU;
 
+    GameScreen::GameData gameData;
+
+
 
     // Main game loop
     while (!WindowShouldClose()) {
@@ -28,11 +31,11 @@ int main(void) {
         if (currentGameState == MAIN_MENU) {
             GameState newGameState = MainMenu::UpdateMainMenu();
             if (newGameState == GAME_SCREEN){
-                GameScreen::InitGame();
+                GameScreen::InitGame(gameData);
                 currentGameState = newGameState;
             }
         } else if (currentGameState == GAME_SCREEN) {
-            GameScreen::UpdateGame();
+            GameScreen::UpdateGame(gameData);
             if (IsKeyPressed(KEY_BACKSPACE)) {
                 currentGameState = PAUSE_MENU;
                 PauseMenu::InitPauseMenu();
@@ -40,7 +43,7 @@ int main(void) {
         } else if (currentGameState == PAUSE_MENU){
             GameState newGameState = PauseMenu::UpdatePauseMenu();
             if (newGameState == MAIN_MENU){
-                GameScreen::UnloadGame();
+                GameScreen::UnloadGame(gameData);
                 currentGameState = newGameState;   
             } else if (newGameState == GAME_SCREEN){
                 currentGameState = newGameState;
@@ -56,7 +59,7 @@ int main(void) {
             if (currentGameState == MAIN_MENU) {
                 MainMenu::DrawMainMenu();
             } else if (currentGameState == GAME_SCREEN) {
-                GameScreen::DrawGame();
+                GameScreen::DrawGame(gameData);
             } else if (currentGameState == PAUSE_MENU){
                 PauseMenu::DrawPauseMenu();
             }
