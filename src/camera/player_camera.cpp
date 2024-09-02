@@ -32,7 +32,7 @@ namespace GameScreen {
 
 
 
-    int PlayerCamera::UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::EnemyData& data){
+    MazeCells PlayerCamera::UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::EnemyData& data){
         
         Vector3 forward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
         Vector3 right = Vector3Normalize(Vector3CrossProduct(forward, camera.up));
@@ -52,7 +52,7 @@ namespace GameScreen {
         
 
         // Check for collision at the new position
-        int collisionType = CollisionHandling::CheckCollision(potentialPlayerBody, wallBoundingBoxes, endpointBoundingBox);
+        MazeCells collisionType = CollisionHandling::CheckCollision(potentialPlayerBody, wallBoundingBoxes, endpointBoundingBox);
         bool playerEnemyCollision = CollisionHandling::CheckPlayerEnemyCollision(playerBody, data);
        
         // Calculate distance to the closest enemy from current and potential positions
@@ -61,7 +61,7 @@ namespace GameScreen {
         
     
         // Collision resolution and position update
-        if (collisionType == 0 && (!playerEnemyCollision || distanceToEnemyFromPotential > distanceToEnemyFromCurrent)) {
+        if (collisionType == MazeCells::FLOOR && (!playerEnemyCollision || distanceToEnemyFromPotential > distanceToEnemyFromCurrent)) {
             playerBody = potentialPlayerBody; // Update playerBody with the new position
             camera.position = Vector3Subtract(potentialNewPosition, Vector3Scale(forward, 0.0f)); // Update camera position based on playerBody
         } else {

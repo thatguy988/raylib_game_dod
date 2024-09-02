@@ -69,7 +69,7 @@
                 gameData.MazeData.openPositions.clear();
                 for (int i = 0; i < gameData.MazeData.n; ++i) {
                     for (int j = 0; j < gameData.MazeData.m; ++j) {
-                        if (gameData.MazeData.maze[i][j] == 0) {
+                        if (gameData.MazeData.maze[i][j] == MazeCells::FLOOR) {
                             gameData.MazeData.openPositions.push_back(Vector3{static_cast<float>(j) * gameData.MazeData.blockSize, 0.0f, static_cast<float>(i) * gameData.MazeData.blockSize});
                         }
                     }
@@ -121,7 +121,7 @@
                 }
             }
 
-            if (exitpoint == 2 && IsKeyPressed(KEY_R) && gameData.canExitLevel) {
+            if (exitpoint == MazeCells::ENDING_POINT && IsKeyPressed(KEY_R) && gameData.canExitLevel) {
                 gameData.level += 1;
                 InitGame(gameData);
             }

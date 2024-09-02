@@ -8,6 +8,7 @@
 #include "../entities/enemy/enemy.h"
 #include "../entities/ammobox/ammobox.h"
 #include "../entities/healthbox/HealthBox.h"
+#include "../maze/maze_cells.h"
 
 namespace EnemySystem {
     struct EnemyData;
@@ -35,7 +36,7 @@ namespace CollisionHandling {
         BulletSystem::WeaponType ammoType; // if ammobox what weapon type
     };
     
-    int CheckCollision(const BoundingBox &playerBody, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox);
+    MazeCells CheckCollision(const BoundingBox &playerBody, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox);
     
     bool CheckBulletCollision(const Vector3 &bulletPosition, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, float bulletRadius);
 

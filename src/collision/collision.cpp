@@ -10,20 +10,20 @@
 //GameScreen
 namespace CollisionHandling {
     
-    int CheckCollision(const BoundingBox &playerBody, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox) {
+    MazeCells CheckCollision(const BoundingBox &playerBody, const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox) {
         // Check collision with walls
         for (const auto& wallBox : wallBoundingBoxes) {
             if (CheckCollisionBoxes(playerBody, wallBox)) {
-                return 1; // Collision with a wall
+                return MazeCells::WALL; // Collision with a wall
             }
         }
 
         // Check collision with the endpoint
         if (CheckCollisionBoxes(playerBody, endpointBoundingBox)) {
-            return 2; // Collision with endpoint
+            return MazeCells::ENDING_POINT; // Collision with endpoint
         }
 
-        return 0; // No collision
+        return MazeCells::FLOOR; // No collision
     }
 
     void CheckBulletOutOfBounds(BulletSystem::BulletData& data, BulletSystem::SparseSet& set, const BoundingBox& boundary) {

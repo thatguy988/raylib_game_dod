@@ -12,6 +12,7 @@
 
 
 #include "../collision/collision.h"
+#include "../maze/maze_cells.h"
 
 namespace EnemySystem {
     struct EnemyData;
@@ -32,7 +33,7 @@ namespace GameScreen {
         PlayerCamera(float camSpeed, float height, float width);
         void InitializeCamera(std::pair<int, int> startCoords, float blockSize);
         
-        int UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::EnemyData& data);
+        MazeCells UpdateCamera(const std::vector<BoundingBox>& wallBoundingBoxes, const BoundingBox& endpointBoundingBox, EnemySystem::EnemyData& data);
 
 
         float GetDistanceToClosestEnemy(const Vector3& position, EnemySystem::EnemyData& data);

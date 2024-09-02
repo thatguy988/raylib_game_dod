@@ -2,29 +2,26 @@
 
 namespace PredefinedLevels {
 
-    // Example predefined level
-    // 3 is starting pointer
-    // 2 is exit
-    const std::vector<std::vector<int>> level50 = {
-        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-        {1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1}
+    const std::vector<std::vector<MazeCells>> level10 = {
+        {MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::STARTING_POINT, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::FLOOR, MazeCells::WALL},
+        {MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::ENDING_POINT, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL, MazeCells::WALL}
     };
+    
 
-    const std::vector<std::vector<int>>& GetLevel(int levelNumber) {
-        static const std::vector<std::vector<int>> emptyLevel; // Static empty level
+    const std::vector<std::vector<MazeCells>>& GetLevel(int levelNumber) {
+        static const std::vector<std::vector<MazeCells>> emptyLevel; // Static empty level
 
         switch (levelNumber) {
             case 10:
-                return level50;
+                return level10;
             // Add more cases for other predefined levels
             default:
                 return emptyLevel;

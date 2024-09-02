@@ -10,6 +10,7 @@
 
 
 #include "../common.h"
+#include "maze_cells.h"
 
 
 
@@ -24,7 +25,7 @@ namespace MazeGenerator {
         {
             int n;//number of rows
             int m;//number of columns
-            int maze[MAX][MAX];
+            MazeCells maze[MAX][MAX];
             float blockSize;
             std::vector<Vector3> openPositions; // Vector to store open positions
             std::vector<Vector3> openPositionsForItems;
@@ -47,7 +48,7 @@ namespace MazeGenerator {
 
     void InitializeOutOfBoundsBox(MazeData& mazeData, float buffer);
     void GenerateWallBoundingBoxes(MazeData& mazeData);
-    std::pair<std::pair<int, int>, std::pair<int, int>> ConvertPredefinedLevelToMaze(const std::vector<std::vector<int>>& predefinedLevel, MazeData& mazeData);
+    std::pair<std::pair<int, int>, std::pair<int, int>> ConvertPredefinedLevelToMaze(const std::vector<std::vector<MazeCells>>& predefinedLevel, MazeData& mazeData);
 
 
 

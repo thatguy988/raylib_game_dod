@@ -18,7 +18,7 @@ namespace MazeGenerator {
         // Initialize all cells as walls
         for (int i = 0; i < mazeData.n; ++i) {
             for (int j = 0; j < mazeData.m; ++j) {
-                mazeData.maze[i][j] = 1;
+                mazeData.maze[i][j] = MazeCells::WALL;
             }
         }
 
@@ -29,7 +29,7 @@ namespace MazeGenerator {
         // Choose a starting point not on the outer edges
         int start_x = rng() % (mazeData.n - 2) + 1;
         int start_y = rng() % (mazeData.m - 2) + 1;
-        mazeData.maze[start_x][start_y] = 0;
+        mazeData.maze[start_x][start_y] = MazeCells::FLOOR;
         
 
         // Add walls of the starting cell to the wall list
@@ -53,17 +53,17 @@ namespace MazeGenerator {
             for (int i = 0; i < 4; ++i) {
                 int nx = wx + dx[i];
                 int ny = wy + dy[i];
-                if (nx >= 0 && nx < mazeData.n && ny >= 0 && ny < mazeData.m && mazeData.maze[nx][ny] == 0) {
+                if (nx >= 0 && nx < mazeData.n && ny >= 0 && ny < mazeData.m && mazeData.maze[nx][ny] == MazeCells::FLOOR) {
                     visitedCells++;
                 }
             }
 
             if (visitedCells == 1) {
-                mazeData.maze[wx][wy] = 0;
+                mazeData.maze[wx][wy] = MazeCells::FLOOR;;
                 for (int i = 0; i < 4; ++i) {
                     int nx = wx + dx[i];
                     int ny = wy + dy[i];
-                    if (nx > 0 && nx < mazeData.n - 1 && ny > 0 && ny < mazeData.m - 1 && mazeData.maze[nx][ny] == 1) {
+                    if (nx > 0 && nx < mazeData.n - 1 && ny > 0 && ny < mazeData.m - 1 && mazeData.maze[nx][ny] == MazeCells::WALL) {
                         walls.push_back({nx, ny});
                     }
                 }
@@ -73,13 +73,13 @@ namespace MazeGenerator {
         // Prune dead ends
         for (int x = 0; x < mazeData.n; ++x) {
             for (int y = 0; y < mazeData.m; ++y) {
-                if (mazeData.maze[x][y] == 0) {
+                if (mazeData.maze[x][y] == MazeCells::FLOOR) {
                     int wallCount = 0;
                     std::vector<std::pair<int, int>> adjWalls;
                     for (int i = 0; i < 4; ++i) {
                         int nx = x + dx[i];
                         int ny = y + dy[i];
-                        if (nx > 0 && nx < mazeData.n - 1 && ny > 0 && ny < mazeData.m - 1 && mazeData.maze[nx][ny] == 1) {
+                        if (nx > 0 && nx < mazeData.n - 1 && ny > 0 && ny < mazeData.m - 1 && mazeData.maze[nx][ny] == MazeCells::WALL) {
                             wallCount++;
                             adjWalls.push_back({nx, ny});
                         }
@@ -89,7 +89,7 @@ namespace MazeGenerator {
                         int index = rng() % adjWalls.size();
                         int wx = adjWalls[index].first;
                         int wy = adjWalls[index].second;
-                        mazeData.maze[wx][wy] = 0; // Turn one of the walls into a path
+                        mazeData.maze[wx][wy] = MazeCells::FLOOR; // Turn one of the walls into a path
                     }
                 }
             }
@@ -123,7 +123,7 @@ namespace MazeGenerator {
           for(int i = 0; i<4; ++i){
               int nx = end_x + dx[i];
               int ny = end_y + dy[i];
-              if (nx>=0 && nx < mazeData.n && ny >= 0 && ny < mazeData.m && mazeData.maze[nx][ny] == 0){
+              if (nx>=0 && nx < mazeData.n && ny >= 0 && ny < mazeData.m && mazeData.maze[nx][ny] == MazeCells::FLOOR){
                   isEndPointValid = true;
                   break;
               }
@@ -131,8 +131,8 @@ namespace MazeGenerator {
           }while(!isEndPointValid);
         
         
-        mazeData.maze[end_x][end_y] = 2; // end point of maze
-        mazeData.maze[start_x][start_y] = 3;
+        mazeData.maze[end_x][end_y] = MazeCells::ENDING_POINT; // end point of maze
+        mazeData.maze[start_x][start_y] = MazeCells::STARTING_POINT;
             
         return std::make_pair(std::make_pair(start_x, start_y), std::make_pair(end_x, end_y));
     }
@@ -151,7 +151,7 @@ namespace MazeGenerator {
             mazeData.openPositions.clear();
             for (int i = 0; i < mazeData.n; ++i) {
                 for (int j = 0; j < mazeData.m; ++j) {
-                    if (mazeData.maze[i][j] == 0) {
+                    if (mazeData.maze[i][j] == MazeCells::FLOOR) {
                         mazeData.openPositions.push_back(Vector3{static_cast<float>(j) * mazeData.blockSize, 0.0f, static_cast<float>(i) * mazeData.blockSize});
                     }
                 }
@@ -195,15 +195,15 @@ namespace MazeGenerator {
     void DrawMaze(const MazeData& mazeData) {
         for (int i = 0; i < mazeData.n; ++i) {
             for (int j = 0; j < mazeData.m; ++j) {
-                if (mazeData.maze[i][j] == 1) { 
+                if (mazeData.maze[i][j] == MazeCells::WALL) { 
                     // Draw walls
                     DrawCube(Vector3 { (float)j * mazeData.blockSize, mazeData.wallHeight / 2, (float)i * mazeData.blockSize }, 
                              mazeData.blockSize, mazeData.wallHeight, mazeData.blockSize, DARKGRAY);
-                } else if(mazeData.maze[i][j] == 0 || mazeData.maze[i][j] == 3) {
+                } else if(mazeData.maze[i][j] == MazeCells::FLOOR || mazeData.maze[i][j] == MazeCells::STARTING_POINT) {
                     // Draw floor
                     DrawCube(Vector3 { (float)j * mazeData.blockSize, -mazeData.floorThickness / 2, (float)i * mazeData.blockSize }, 
                              mazeData.blockSize, mazeData.floorThickness, mazeData.blockSize, LIGHTGRAY);
-                } else if(mazeData.maze[i][j] == 2){
+                } else if(mazeData.maze[i][j] == MazeCells::ENDING_POINT) {
                     //Draw endpoint
                     DrawCube(Vector3 { (float)j * mazeData.blockSize, mazeData.wallHeight / 2, (float)i * mazeData.blockSize }, 
                              mazeData.blockSize, mazeData.wallHeight, mazeData.blockSize, GREEN);
@@ -228,7 +228,7 @@ namespace MazeGenerator {
         mazeData.wallBoundingBoxes.clear();
         for (int i = 0; i < mazeData.n; ++i) {
             for (int j = 0; j < mazeData.m; ++j) {
-                if (mazeData.maze[i][j] == 1 || mazeData.maze[i][j] == 2) {
+                if (mazeData.maze[i][j] == MazeCells::WALL || mazeData.maze[i][j] == MazeCells::ENDING_POINT) {
                     Vector3 wallPosition = {(float)j * mazeData.blockSize, 
                                              mazeData.wallHeight / 2, 
                                              (float)i * mazeData.blockSize};
@@ -239,9 +239,9 @@ namespace MazeGenerator {
                                        Vector3Add(wallPosition, halfSize)};
 
                     // 1 is wall and 2 is endpoint
-                    if (mazeData.maze[i][j] == 1) {
+                    if (mazeData.maze[i][j] == MazeCells::WALL) {
                         mazeData.wallBoundingBoxes.push_back(box);
-                    } else if (mazeData.maze[i][j] == 2) {
+                    } else if (mazeData.maze[i][j] == MazeCells::ENDING_POINT) {
                         mazeData.endpointBoundingBox = box;
                     }
                 }
@@ -249,7 +249,7 @@ namespace MazeGenerator {
         }
     }
 
-    std::pair<std::pair<int, int>, std::pair<int, int>> ConvertPredefinedLevelToMaze(const std::vector<std::vector<int>>& predefinedLevel, MazeData& mazeData) {
+    std::pair<std::pair<int, int>, std::pair<int, int>> ConvertPredefinedLevelToMaze(const std::vector<std::vector<MazeCells>>& predefinedLevel, MazeData& mazeData) {
         mazeData.n = predefinedLevel.size();    
         mazeData.m = predefinedLevel[0].size(); 
         mazeData.mazeWidth = mazeData.m * mazeData.blockSize; //collision bounds
@@ -258,10 +258,10 @@ namespace MazeGenerator {
         for (int i = 0; i < mazeData.n; ++i) {
             for (int j = 0; j < mazeData.m; ++j) {
                 mazeData.maze[i][j] = predefinedLevel[i][j];
-                if (mazeData.maze[i][j] == 3) { // 3 represents the start point
+                if (mazeData.maze[i][j] == MazeCells::STARTING_POINT) { 
                     mazeData.startCoords = {i, j};
                 }
-                if (mazeData.maze[i][j] == 2) { // 2 represents the end point
+                if (mazeData.maze[i][j] == MazeCells::ENDING_POINT) {
                     mazeData.endCoords = {i, j};
                 }
             }

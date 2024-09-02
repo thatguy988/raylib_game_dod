@@ -76,7 +76,7 @@ namespace EnemySystem {
             for (auto& neighbor : neighbors) {
                 int nx = static_cast<int>(neighbor.x);
                 int ny = static_cast<int>(neighbor.z);
-                if (nx >= 0 && nx < mazeData.m && ny >= 0 && ny < mazeData.n && mazeData.maze[ny][nx] == 0 && cameFrom.find(PosToIndex(nx, ny, mazeData.m)) == cameFrom.end()) {
+                if (nx >= 0 && nx < mazeData.m && ny >= 0 && ny < mazeData.n && mazeData.maze[ny][nx] == MazeCells::FLOOR && cameFrom.find(PosToIndex(nx, ny, mazeData.m)) == cameFrom.end()) {
                     queue.push(neighbor);
                     cameFrom[PosToIndex(nx, ny, mazeData.m)] = current;
                 }
